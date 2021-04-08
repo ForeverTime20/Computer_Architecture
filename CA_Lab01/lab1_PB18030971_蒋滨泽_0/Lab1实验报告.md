@@ -30,6 +30,18 @@
 
 ## 3.描述执行一条LHU指令的过程
 
+数据通路如下：
+
+![](\img\LHU.png)
+
+|         | 数据通路                                                     | 控制信号                                                     |
+| ------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| IF(红)  | PC指向LHU指令的地址，取出的指令送往IF/ID段寄存器。           | BrE=0；JalrE=0；JalD=0；                                     |
+| ID(绿)  | Rs1=Instr[19:15];ImmD=Instr[31:20];送往寄存器堆读出对应寄存器号的数据RegOut1D；Rd=Instr[11:7]送往ID/EX段寄存器。ImmD跳转地址的偏移量送往ID/EX段寄存器。同时指令被送往Control Unit产生控制信号。 |                                                              |
+| EX(红)  | RegOut1E与偏移量ImmE分别经过多选器送往ALU进行加法运算得到跳转地址，运算结果ALUOutE送入EX/MEM段间寄存器；目的寄存器号RdE送往EX/MEM段间寄存器。传递控制信号。 | AluControlE=ALU_ADD；Forward1E=0；Forward2E=0；AluSrc1E=1；AluSrc2E=2； |
+| MEM(绿) | ALU运算结果AluOutM送往DataMemory取出数据并存到段间寄存器，目的寄存器RdM送往MEM/WB段间寄存器。传递控制信号。 | MemWriteM=0；                                                |
+| WB(黄)  | Data Ext将取出的数据选择16位并进行无符号数值扩展到32位，结果通过多选器和寄存器写端口写入寄存器堆，目标寄存器号标识要写入的寄存器。 | RegWrite=1；MemtoReg=1；LoadedBytesSelect=2Byte；            |
+
 ## 4.如果要实现CSR指令，设计图中还需要增加什么部件和数据通路？
 
 ## 5.Verilog如何实现立即数的扩展？
