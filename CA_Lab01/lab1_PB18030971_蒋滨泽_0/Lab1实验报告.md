@@ -18,6 +18,16 @@
 
 ## 2.描述执行一条BEQ指令的过程
 
+数据通路如下：
+
+![](\img\BEQ.png)
+
+|        | 数据通路                                                     | 控制信号                                                     |
+| ------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| IF(红) | PC指向BEQ指令的地址，取出的指令送往IF/ID段寄存器。           | BrE=0；JalrE=0；JalD=0；                                     |
+| ID(绿) | Rs1=Instr[19:15];Rs2=Instr[24:20];分别送往寄存器堆读出对应寄存器号的数据RegOut1D，RegOut2D；ImmD跳转地址的偏移量送往ID/EX段寄存器。同时指令被送往Control Unit产生控制信号。 |                                                              |
+| EX(红) | RegOut1E与RegOut2E分别经过多选器送往Branch Decision进行运算，分支判断结果返回至NPC Generator；跳转目标地址也一同被送至NPC Generator。传递控制信号到取指部分。 | Forward1E=0；Forward2E=0；AluSrc1E=1；AluSrc2E=0；BrType=BEQ；BrE=分支是否发生；JalrE=0；JalD=0； |
+
 ## 3.描述执行一条LHU指令的过程
 
 ## 4.如果要实现CSR指令，设计图中还需要增加什么部件和数据通路？
