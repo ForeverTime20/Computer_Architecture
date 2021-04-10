@@ -60,6 +60,36 @@ WB段：将ALU运算结果配合CSR Write、CSR addr信号写入CSR；CSR数据�
 
 ## 5.Verilog如何实现立即数的扩展？
 
+- I-Type：
+
+  ```verilog
+  assign 	imm	= {{21{Instr[31]}}, Instr[30:20]};
+  ```
+
+- S-Type：
+
+  ```verilog
+  assign	imm = {{21{Instr[31]}}, Instr[30:25], Instr[11:7]};
+  ```
+
+- B-Type：
+
+  ```verilog
+  assign 	imm = {{20{Instr[31]}}, Instr[7], Instr[30:25], instr[11:8], 1'b0};
+  ```
+
+- U-Type：
+
+  ```verilog
+  assign  imm = {Instr[31:12], 12'b0};
+  ```
+
+- J-Type：
+
+  ```verilog
+  assign	imm = {{12{Instr[31]}}, Instr[19:12], Instr[20], Instr[31:21], 1'b0};
+  ```
+
 ## 6.如何实现Data Memory的非字对齐的Load和Store？
 
 ## 7.ALU模块中，默认wire变量是有符号数还是无符号数？
