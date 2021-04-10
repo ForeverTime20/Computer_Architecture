@@ -96,6 +96,8 @@ WB段：将ALU运算结果配合CSR Write、CSR addr信号写入CSR；CSR数据�
 
 ## 7.ALU模块中，默认wire变量是有符号数还是无符号数？
 
+无符号数。
+
 ## 8.简述BranchE信号的作用
 
 ## 9.NPC Generator中对于不同跳转target的选择有没有优先级？
