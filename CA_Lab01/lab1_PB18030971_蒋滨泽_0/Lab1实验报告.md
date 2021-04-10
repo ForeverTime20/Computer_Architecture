@@ -92,6 +92,8 @@ WB段：将ALU运算结果配合CSR Write、CSR addr信号写入CSR；CSR数据�
 
 ## 6.如何实现Data Memory的非字对齐的Load和Store？
 
+在Data Memory使用字节交叉编址，按照地址 mod4 的余数将不同字节映射到4个不同的存储体，可自由选择不同的存储体load store。
+
 ## 7.ALU模块中，默认wire变量是有符号数还是无符号数？
 
 ## 8.简述BranchE信号的作用
