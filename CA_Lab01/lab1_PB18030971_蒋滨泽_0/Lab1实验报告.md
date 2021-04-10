@@ -104,6 +104,8 @@ WB段：将ALU运算结果配合CSR Write、CSR addr信号写入CSR；CSR数据�
 
 ## 9.NPC Generator中对于不同跳转target的选择有没有优先级？
 
+有，优先级：Branch = Jalr > Jal
+
 ## 10.Harzard模块中，有哪几类冲突需要插入气泡，分别使流水线停顿几个周期？
 
 ## 11.Harzard模块中采用静态分支预测器，遇到branch指令时，如何控制flush和stall信号？
