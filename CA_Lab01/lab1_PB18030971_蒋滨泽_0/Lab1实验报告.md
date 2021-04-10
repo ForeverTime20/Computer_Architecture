@@ -100,6 +100,8 @@ WB段：将ALU运算结果配合CSR Write、CSR addr信号写入CSR；CSR数据�
 
 ## 8.简述BranchE信号的作用
 
+分支指令在EX段进行分支判断时，如果分支成立，通过使能BranchE信号让IF段的NPC选择分支的跳转地址。
+
 ## 9.NPC Generator中对于不同跳转target的选择有没有优先级？
 
 ## 10.Harzard模块中，有哪几类冲突需要插入气泡，分别使流水线停顿几个周期？
