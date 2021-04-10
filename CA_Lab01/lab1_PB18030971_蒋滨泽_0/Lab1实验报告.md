@@ -114,4 +114,6 @@ Load - Use型的 RAW 数据相关：停顿一个周期。
 
 ## 11.Harzard模块中采用静态分支预测器，遇到branch指令时，如何控制flush和stall信号？
 
+Branch指令在EX段如果发生跳转，则Flush IF/ID和ID/EX段寄存器。否则不需要flush或stall。
+
 ## 12.0号寄存器的值始终为0，是否会对forward的处理产生影响？
