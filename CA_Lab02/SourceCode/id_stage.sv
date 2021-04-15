@@ -14,7 +14,7 @@
 
 module id_stage import core_pkg::*;
 #(
-    parameter DDEBUG        = 0
+    parameter DEBUG        = 0
 )
 (
     input   logic           clk,
