@@ -45,7 +45,7 @@ module id_stage import core_pkg::*;
     output  logic   [WB_WR_MUX_OP_WIDTH-1:0] regfile_wr_mux_ex_o,
     output  logic           mem_req_ex_o,
     output  logic           mem_we_ex_o,
-    output  logic   [2 :0]  mem_be_ex_o,
+    output  logic   [2 :0]  mem_type_ex_o,
     output  logic   [BRCH_OP_WIDTH-1:0] branch_type_ex_o,
 
     input   logic   [4 :0]  regfile_waddr_wb_i,
@@ -107,7 +107,7 @@ module id_stage import core_pkg::*;
     logic           rs2_used;
     logic           mem_req;
     logic           mem_we;
-    logic   [2 :0]  mem_be;
+    logic   [2 :0]  mem_type;
     logic           regfile_we;
     logic   [WB_WR_MUX_OP_WIDTH-1:0]  regfile_wr_mux;
     logic   [BRCH_OP_WIDTH-1:0] branch_type;
@@ -197,7 +197,7 @@ module id_stage import core_pkg::*;
         rs2_used        = 1'b0;
         mem_req         = 1'b0;
         mem_we          = 1'b0;
-        mem_be          = 3'b111;   // because 3'b111 is not an option, thus we can detect illegal instr
+        mem_type          = 3'b111;   // because 3'b111 is not an option, thus we can detect illegal instr
         regfile_we      = 1'b0;
         regfile_wr_mux  = '0;
         branch_type     = BRCH_NOP;
@@ -259,9 +259,9 @@ module id_stage import core_pkg::*;
                 imm_sel         = IMM_S;
                 // store size
                 case (instr[14:12])
-                    3'b000: mem_be  = 3'b000; // SB
-                    3'b001: mem_be  = 3'b001; // SH
-                    3'b010: mem_be  = 3'b010; // SW
+                    3'b000: mem_type  = 3'b000; // SB
+                    3'b001: mem_type  = 3'b001; // SH
+                    3'b010: mem_type  = 3'b010; // SW
                     default: illegal_instr = 1;
                 endcase
             end
@@ -278,11 +278,11 @@ module id_stage import core_pkg::*;
                 imm_sel         = IMM_I;
                 // load size
                 case (instr[14:12])
-                    3'b000: mem_be  = 3'b000; // LB
-                    3'b001: mem_be  = 3'b001; // LH
-                    3'b010: mem_be  = 3'b010; // LW
-                    3'b100: mem_be  = 3'b100; // LBU
-                    3'b101: mem_be  = 3'b101; // LHU
+                    3'b000: mem_type  = 3'b000; // LB
+                    3'b001: mem_type  = 3'b001; // LH
+                    3'b010: mem_type  = 3'b010; // LW
+                    3'b100: mem_type  = 3'b100; // LBU
+                    3'b101: mem_type  = 3'b101; // LHU
                     default: illegal_instr = 1;
                 endcase
             end
@@ -409,7 +409,7 @@ module id_stage import core_pkg::*;
     assign regfile_wr_mux_ex_o  = regfile_wr_mux;
     assign mem_req_ex_o         = mem_req;
     assign mem_we_ex_o          = mem_we;
-    assign mem_be_ex_o          = mem_be;
+    assign mem_type_ex_o          = mem_type;
     assign branch_type_ex_o     = branch_type;
 
 

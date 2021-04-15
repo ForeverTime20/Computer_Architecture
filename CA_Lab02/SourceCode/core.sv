@@ -125,7 +125,7 @@ module RV32Core import core_pkg::*;
         .regfile_wr_mux_ex_o( ),
         .mem_req_ex_o       ( ),
         .mem_we_ex_o        ( ),
-        .mem_be_ex_o        ( ),
+        .mem_type_ex_o        ( ),
         .branch_type_ex_o   ( ),
 
         // From WB stage
@@ -172,7 +172,7 @@ module RV32Core import core_pkg::*;
         .regfile_wr_mux_i   ( ),
         .mem_req_i          ( ),
         .mem_we_i           ( ),
-        .mem_be_i           ( ),
+        .mem_type_i           ( ),
         .branch_type_i      ( ),
 
         // handle branches
@@ -193,7 +193,7 @@ module RV32Core import core_pkg::*;
         .regfile_wr_mux_mem_o( ),
         .mem_req_mem_o      ( ),
         .mem_we_mem_o       ( ),
-        .mem_be_mem_o       ( ),
+        .mem_type_mem_o       ( ),
         .mem_wdata_mem_o    ( ),
         
         // Forward Data
@@ -224,7 +224,7 @@ module RV32Core import core_pkg::*;
         .regfile_wr_mux_i   ( ),
         .mem_req_i          ( ),
         .mem_we_i           ( ),
-        .mem_be_i           ( ),
+        .mem_type_i           ( ),
         .mem_wdata_i        ( ),
 
         // to controller
@@ -236,7 +236,11 @@ module RV32Core import core_pkg::*;
 
         // MEM-WB Pipeline
         .pc_mem_o           ( pc_me            ),
-        .mem_rdata_wb_o     ( ),
+        .mem_req_wb_o       ( ),
+        .mem_we_wb_o        ( ),
+        .mem_be_wb_o        ( ),
+        .mem_type_wb_o      ( ),
+        .mem_wdata_wb_o     ( ),
         .regfile_waddr_wb_o ( ),
         .regfile_wdata_wb_o ( ),
         .regfile_we_wb_o    ( ),

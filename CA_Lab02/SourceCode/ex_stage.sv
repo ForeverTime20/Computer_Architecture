@@ -40,7 +40,7 @@ module ex_stage import core_pkg::*;
     input   logic   [WB_WR_MUX_OP_WIDTH-1:0] regfile_wr_mux_i,
     input   logic           mem_req_i,
     input   logic           mem_we_i,
-    input   logic   [2 :0]  mem_be_i,
+    input   logic   [2 :0]  mem_type_i,
     input   logic   [BRCH_OP_WIDTH-1:0] branch_type_i,
 
     // handle branches
@@ -61,7 +61,7 @@ module ex_stage import core_pkg::*;
     output  logic   [WB_WR_MUX_OP_WIDTH-1:0] regfile_wr_mux_mem_o,
     output  logic           mem_req_mem_o,
     output  logic           mem_we_mem_o,
-    output  logic   [2 :0]  mem_be_mem_o,
+    output  logic   [2 :0]  mem_type_mem_o,
     output  logic   [31:0]  mem_wdata_mem_o,
 
     // Forward Data
@@ -89,7 +89,7 @@ module ex_stage import core_pkg::*;
     logic   [WB_WR_MUX_OP_WIDTH-1:0] regfile_wr_mux;
     logic           mem_req;
     logic           mem_we;
-    logic   [2 :0]  mem_be;
+    logic   [2 :0]  mem_type;
     logic   [BRCH_OP_WIDTH-1:0] branch_type;
 
     // datapath signals in EX
@@ -122,7 +122,7 @@ module ex_stage import core_pkg::*;
             regfile_wr_mux      <= '0;
             mem_req             <= 1'b0;
             mem_we              <= 1'b0;
-            mem_be              <= '0;
+            mem_type              <= '0;
             branch_type         <= BRCH_NOP;
         end
         else if(~stall_ex_i) begin
@@ -144,7 +144,7 @@ module ex_stage import core_pkg::*;
             regfile_wr_mux      <= regfile_wr_mux_i;
             mem_req             <= mem_req_i;
             mem_we              <= mem_we_i;
-            mem_be              <= mem_be_i;
+            mem_type              <= mem_type_i;
             branch_type         <= branch_type_i;
         end
     end
@@ -263,7 +263,7 @@ module ex_stage import core_pkg::*;
     assign regfile_wr_mux_mem_o = regfile_wr_mux;
     assign mem_req_mem_o        = mem_req;
     assign mem_we_mem_o         = mem_we;
-    assign mem_be_mem_o         = mem_be;
+    assign mem_type_mem_o         = mem_type;
     assign mem_wdata_mem_o      = rs2_rdata_fw;
 
 endmodule
