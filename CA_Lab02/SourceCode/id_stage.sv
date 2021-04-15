@@ -31,8 +31,8 @@ module id_stage import core_pkg::*;
     output  logic   [31:0]  pc_id_o,
     output  logic           alu_en_ex_o,
     output  logic   [ALU_OP_WIDTH-1:0]  alu_op_ex_o,
-    output  logic   [3 :0]  alu_src_1_ex_o,
-    output  logic   [3 :0]  alu_src_2_ex_o,
+    output  logic   [ALU_SRC_WIDTH-1 :0]  alu_src_1_ex_o,
+    output  logic   [ALU_SRC_WIDTH-1 :0]  alu_src_2_ex_o,
     output  logic   [4 :0]  rs1_raddr_ex_o,
     output  logic   [4 :0]  rs2_raddr_ex_o,
     output  logic   [31:0]  rs1_rdata_ex_o,
@@ -42,15 +42,15 @@ module id_stage import core_pkg::*;
     output  logic   [31:0]  imm_ex_o,
     output  logic   [4 :0]  regfile_waddr_ex_o,
     output  logic           regfile_we_ex_o,
-    output  logic   [3 :0]  regfile_wr_mux_ex_o,
+    output  logic   [WB_WR_MUX_OP_WIDTH-1:0] regfile_wr_mux_ex_o,
     output  logic           mem_req_ex_o,
     output  logic           mem_we_ex_o,
-    output  logic   [3 :0]  mem_be_ex_o,
+    output  logic   [2 :0]  mem_be_ex_o,
     output  logic   [BRCH_OP_WIDTH-1:0] branch_type_ex_o,
 
     input   logic   [4 :0]  regfile_waddr_wb_i,
     input   logic           regfile_we_wb_i,
-    input   logic   [31:0]  regfile_wdata_i
+    input   logic   [31:0]  regfile_wdata_wb_i
 );
 
   // Source/Destination register instruction index
@@ -66,6 +66,14 @@ module id_stage import core_pkg::*;
     localparam REG_D_MSB  = 11;
     localparam REG_D_LSB  = 7;
 
+    localparam IMM_OP_WIDTH     = 3;
+    localparam IMM_I            = 0;
+    localparam IMM_IZ           = 1;
+    localparam IMM_S            = 2;
+    localparam IMM_SB           = 3;
+    localparam IMM_U            = 4;
+    localparam IMM_UJ           = 5;
+
 
     logic   [31:0]  instr_raw;
     logic   [31:0]  instr;
@@ -75,11 +83,11 @@ module id_stage import core_pkg::*;
     logic           clear_ff;
 
     // datapath signals
+    logic   [31:0]  jump_target;
     logic   [4 :0]  rs1_raddr;
     logic   [4 :0]  rs2_raddr;
     logic   [31:0]  rs1_rdata;
     logic   [31:0]  rs2_rdata;
-    logic   [31:0]  imm;
     logic   [31:0]  imm_i_type;
     logic   [31:0]  imm_iz_type;
     logic   [31:0]  imm_s_type;
@@ -89,30 +97,35 @@ module id_stage import core_pkg::*;
     logic   [4 :0]  regfile_waddr;
 
     // control signals
+    logic           jump_decision;
     logic           alu_en;
     logic   [ALU_OP_WIDTH-1:0]  alu_op;
-    logic   [3 :0]  alu_src_1;
-    logic   [3 :0]  alu_src_2;
+    logic   [ALU_SRC_WIDTH-1 :0]  alu_src_1;
+    logic   [ALU_SRC_WIDTH-1 :0]  alu_src_2;
     logic           rs1_used;
     logic           rs2_used;
     logic           mem_req;
     logic           mem_we;
-    logic   [3 :0]  mem_be;
+    logic   [2 :0]  mem_be;
     logic           regfile_we;
-    logic   [3 :0]  regfile_wr_mux;
+    logic   [WB_WR_MUX_OP_WIDTH-1:0]  regfile_wr_mux;
     logic   [BRCH_OP_WIDTH-1:0] branch_type;
+
+    // control signals only in ID
+    logic           illegal_instr;
+    logic   [IMM_OP_WIDTH-1:0]  imm_sel;
 
 
     // IF-ID Seg Reg
-    // InstructionRam InstructionRamInst (
-    //      .clk    ( clk        ),
-    //      .addra  ( pc_if_i    ),
-    //      .douta  ( instr_raw  ),
-    //      .web    ( |WE2       ),
-    //      .addrb  ( A2[31:2]   ),
-    //      .dinb   ( WD2        ),
-    //      .doutb  ( RD2        )
-    //  );
+    InstructionRam InstructionRamInst (
+         .clk    ( clk        ),
+         .addra  ( pc_if_i    ),
+         .douta  ( instr_raw  ),
+         .web    (        ),
+         .addrb  (    ),
+         .dinb   (         ),
+         .doutb  (         )
+     );
 
     always_ff @( posedge clk ) begin : PC_ID
         if(~stall_id_i)
@@ -125,21 +138,271 @@ module id_stage import core_pkg::*;
         instr_old   <= instr_raw;
     end
 
-    assign  instr   = stall_ff ? instr_old : (clear_ff ? 32'h0 : instr_raw);
+    assign  instr   = stall_ff ? instr_old : (clear_ff ? 32'h0000_0013 : instr_raw);
 
     // end of IF-ID Seg Reg
 
     // datapath
+    assign  jump_target = pc_id + imm_uj_type;
     assign  rs1_raddr   = instr[REG_S1_MSB:REG_S1_LSB];
     assign  rs2_raddr   = instr[REG_S2_MSB:REG_S2_LSB];
     assign  imm_i_type  = { {20 {instr[31]}}, instr[31:20] };
     assign  imm_iz_type = {            20'b0, instr[31:20] };
     assign  imm_s_type  = { {20 {instr[31]}}, instr[31:25], instr[11:7] };
-    assign  imm_sb_type = { {20 {instr[31]}}, instr[31], instr[7], instr[30:25], instr[11:8], 1'b0 };
+    assign  imm_sb_type = { {19 {instr[31]}}, instr[31], instr[7], instr[30:25], instr[11:8], 1'b0 };
     assign  imm_u_type  = { instr[31:12], 12'b0 };
     assign  imm_uj_type = { {12 {instr[31]}}, instr[19:12], instr[20], instr[30:21], 1'b0 };
     assign  regfile_waddr=instr[REG_D_MSB:REG_D_LSB];
 
-    
+    register_file
+    #(
+        .ADDR_WIDTH         ( 5                  ),
+        .DATA_WIDTH         ( 32                 )
+    )
+    register_file_i
+    (
+        .clk                ( clk                ),
+        .rst_n              ( rst_n              ),
+
+        // Read port a
+        .raddr_a_i          ( rs1_raddr          ),
+        .rdata_a_o          ( rs1_rdata          ),
+
+        // Read port b
+        .raddr_b_i          ( rs2_raddr          ),
+        .rdata_b_o          ( rs2_rdata          ),
+
+        // Write port a
+        .waddr_a_i          ( regfile_waddr_wb_i ),
+        .wdata_a_i          ( regfile_wdata_wb_i ),
+        .we_a_i             ( regfile_we_wb_i    )
+    );
+
+  ///////////////////////////////////////////////
+  //  ____  _____ ____ ___  ____  _____ ____   //
+  // |  _ \| ____/ ___/ _ \|  _ \| ____|  _ \  //
+  // | | | |  _|| |  | | | | | | |  _| | |_) | //
+  // | |_| | |__| |__| |_| | |_| | |___|  _ <  //
+  // |____/|_____\____\___/|____/|_____|_| \_\ //
+  //                                           //
+  ///////////////////////////////////////////////
+    always_comb begin : DECODER
+        jump_decision   = 1'b0;
+        alu_en          = 1'b0;
+        alu_op          = ALU_ADD;
+        alu_src_1       = '0;
+        alu_src_2       = '0;
+        rs1_used        = 1'b0;
+        rs2_used        = 1'b0;
+        mem_req         = 1'b0;
+        mem_we          = 1'b0;
+        mem_be          = 3'b111;   // because 3'b111 is not an option, thus we can detect illegal instr
+        regfile_we      = 1'b0;
+        regfile_wr_mux  = '0;
+        branch_type     = BRCH_NOP;
+
+        illegal_instr   = 1'b0;
+        imm_sel         = '0;
+        case(instr[6:0])
+            OPCODE_JAL: begin
+                // Jump and Link
+                jump_decision   = 1'b1;
+                alu_en          = 1'b1;
+                alu_op          = ALU_ADD;
+                alu_src_1       = ALU_SRC_PC;
+                alu_src_2       = ALU_SRC_IMM;
+                regfile_we      = 1'b1;
+                regfile_wr_mux  = WB_WR_MUX_ALU;
+                imm_sel         = IMM_UJ;
+            end
+
+            OPCODE_JALR: begin
+                // Jump and Link Register
+                alu_en          = 1'b1;
+                alu_op          = ALU_ADD;
+                alu_src_1       = ALU_SRC_REG;
+                alu_src_2       = ALU_SRC_IMM;
+                rs1_used        = 1'b1;
+                regfile_we      = 1'b1;
+                regfile_wr_mux  = WB_WR_MUX_PCINCR;
+                branch_type     = BRCH_JALR;
+                imm_sel         = IMM_I;
+            end
+
+            OPCODE_BRANCH: begin
+                // Branches
+                alu_en          = 1'b1;
+                alu_src_1       = ALU_SRC_REG;
+                alu_src_2       = ALU_SRC_REG;
+                rs1_used        = 1'b1;
+                rs2_used        = 1'b1;
+                branch_type     = {1'b0, instr[14:12]};
+                imm_sel         = IMM_SB;
+                case( {1'b0, instr[14:12]} )
+                    BRCH_BEQ, BRCH_BNE,
+                    BRCH_BGE, BRCH_BLT: alu_op  = ALU_SUB;
+                    BRCH_BGEU,BRCH_BLTU:alu_op  = ALU_SUBU;
+                    default: illegal_instr = 1'b1;
+                endcase
+            end
+
+            OPCODE_STORE: begin
+                alu_en          = 1'b1;
+                alu_op          = ALU_ADD;
+                alu_src_1       = ALU_SRC_REG;  // addr = rs1 + sext[offset]
+                alu_src_2       = ALU_SRC_IMM;
+                rs1_used        = 1'b1;
+                rs2_used        = 1'b1;
+                mem_req         = 1'b1;
+                mem_we          = 1'b1;
+                imm_sel         = IMM_S;
+                // store size
+                case (instr[14:12])
+                    3'b000: mem_be  = 3'b000; // SB
+                    3'b001: mem_be  = 3'b001; // SH
+                    3'b010: mem_be  = 3'b010; // SW
+                    default: illegal_instr = 1;
+                endcase
+            end
+
+            OPCODE_LOAD: begin
+                alu_en          = 1'b1;
+                alu_op          = ALU_ADD;
+                alu_src_1       = ALU_SRC_REG;
+                alu_src_2       = ALU_SRC_IMM;
+                rs1_used        = 1'b1;
+                mem_req         = 1'b1;
+                regfile_we      = 1'b1;
+                regfile_wr_mux  = WB_MR_MUX_MEM;
+                imm_sel         = IMM_I;
+                // load size
+                case (instr[14:12])
+                    3'b000: mem_be  = 3'b000; // LB
+                    3'b001: mem_be  = 3'b001; // LH
+                    3'b010: mem_be  = 3'b010; // LW
+                    3'b100: mem_be  = 3'b100; // LBU
+                    3'b101: mem_be  = 3'b101; // LHU
+                    default: illegal_instr = 1;
+                endcase
+            end
+
+            OPCODE_LUI: begin
+                // Load Upper Immediate
+                alu_en          = 1'b1;
+                alu_op          = ALU_LUI;
+                alu_src_2       = ALU_SRC_IMM;
+                regfile_we      = 1'b1;
+                regfile_wr_mux  = WB_WR_MUX_ALU;
+                imm_sel         = IMM_U;
+            end
+
+            OPCODE_AUIPC: begin
+                // Add Upper Immediate to PC, save to reg rd
+                alu_en          = 1'b1;
+                alu_op          = ALU_ADD;
+                alu_src_1       = ALU_SRC_PC;
+                alu_src_2       = ALU_SRC_IMM;
+                regfile_we      = 1'b1;
+                regfile_wr_mux  = WB_WR_MUX_ALU;
+                imm_sel         = IMM_U;
+            end
+
+            OPCODE_OPIMM: begin
+                // Register-Immediate ALU Operations
+                alu_en          = 1'b1;
+                case(instr[14:12])
+                    3'b000: alu_op = ALU_ADD;  // Add Immediate
+                    3'b010: alu_op = ALU_SLTS; // Set to one if Lower Than Immediate
+                    3'b011: alu_op = ALU_SLTU; // Set to one if Lower Than Immediate Unsigned
+                    3'b100: alu_op = ALU_XOR;  // Exclusive Or with Immediate
+                    3'b110: alu_op = ALU_OR;   // Or with Immediate
+                    3'b111: alu_op = ALU_AND;  // And with Immediate
+                    3'b001: begin
+                            alu_op = ALU_SLL;  // Shift Left Logical by Immediate
+                            if (instr[31:25] != 7'b0)
+                                illegal_instr = 1'b1;
+                            end
+
+                    3'b101: begin
+                            if (instr[31:25] == 7'b0)
+                                alu_op = ALU_SRL;  // Shift Right Logical by Immediate
+                            else if (instr[31:25] == 7'b010_0000)
+                                alu_op = ALU_SRA;  // Shift Right Arithmetically by Immediate
+                            else
+                                illegal_instr = 1'b1;
+                            end
+                    default:    illegal_instr = 1'b1;
+                endcase
+                alu_src_1       = ALU_SRC_REG;
+                alu_src_2       = ALU_SRC_IMM;
+                rs1_used        = 1'b1;
+                regfile_we      = 1'b1;
+                regfile_wr_mux  = WB_WR_MUX_ALU;
+                imm_sel         = IMM_I;
+            end
+
+            OPCODE_OP: begin
+                // Register-Register ALU operation
+                alu_en          = 1'b1;
+                case ({instr[30:25], instr[14:12]})
+                    // RV32I ALU operations
+                    {6'b00_0000, 3'b000}: alu_op = ALU_ADD;   // Add
+                    {6'b10_0000, 3'b000}: alu_op = ALU_SUB;   // Sub
+                    {6'b00_0000, 3'b010}: alu_op = ALU_SLTS;  // Set Lower Than
+                    {6'b00_0000, 3'b011}: alu_op = ALU_SLTU;  // Set Lower Than Unsigned
+                    {6'b00_0000, 3'b100}: alu_op = ALU_XOR;   // Xor
+                    {6'b00_0000, 3'b110}: alu_op = ALU_OR;    // Or
+                    {6'b00_0000, 3'b111}: alu_op = ALU_AND;   // And
+                    {6'b00_0000, 3'b001}: alu_op = ALU_SLL;   // Shift Left Logical
+                    {6'b00_0000, 3'b101}: alu_op = ALU_SRL;   // Shift Right Logical
+                    {6'b10_0000, 3'b101}: alu_op = ALU_SRA;   // Shift Right Arithmetic
+                    default: illegal_instr = 1'b1;
+                endcase
+                alu_src_1       = ALU_SRC_REG;
+                alu_src_2       = ALU_SRC_REG;
+                rs1_used        = 1'b1;
+                rs2_used        = 1'b1;
+                regfile_we      = 1'b1;
+                regfile_wr_mux  = WB_WR_MUX_ALU;
+            end
+
+            default: illegal_instr = 1'b1;
+        endcase
+    end
+
+//////////////////////////////////////////////////////////
+// outut to ex                                          //
+//////////////////////////////////////////////////////////
+    assign pc_id_o              = pc_id;
+    assign alu_en_ex_o          = alu_en;
+    assign alu_op_ex_o          = alu_op;
+    assign alu_src_1_ex_o       = alu_src_1;
+    assign alu_src_2_ex_o       = alu_src_2;
+    assign rs1_raddr_ex_o       = rs1_raddr;
+    assign rs2_raddr_ex_o       = rs2_raddr;
+    assign rs1_rdata_ex_o       = ((regfile_we_wb_i) && (regfile_waddr_wb_i == rs1_raddr) && (rs1_used) && (rs1_raddr != '0)) ? regfile_wdata_wb_i : rs1_rdata;
+    assign rs2_rdata_ex_o       = ((regfile_we_wb_i) && (regfile_waddr_wb_i == rs2_raddr) && (rs2_used) && (rs2_raddr != '0)) ? regfile_wdata_wb_i : rs2_rdata;
+    assign rs1_used_ex_o        = rs1_used;
+    assign rs2_used_ex_o        = rs2_used;
+    always_comb begin : IMM_SELECT
+        imm_ex_o    =   '0;
+        case(imm_sel)
+            IMM_I:  imm_ex_o = imm_i_type;
+            IMM_IZ: imm_ex_o = imm_iz_type;
+            IMM_S:  imm_ex_o = imm_s_type;
+            IMM_SB: imm_ex_o = imm_sb_type;
+            IMM_U:  imm_ex_o = imm_u_type;
+            IMM_UJ: imm_ex_o = imm_uj_type;
+            default:;
+        endcase
+    end
+    assign regfile_waddr_ex_o   = regfile_waddr;
+    assign regfile_we_ex_o      = regfile_we;
+    assign regfile_wr_mux_ex_o  = regfile_wr_mux;
+    assign mem_req_ex_o         = mem_req;
+    assign mem_we_ex_o          = mem_we;
+    assign mem_be_ex_o          = mem_be;
+    assign branch_type_ex_o     = branch_type;
+
 
 endmodule

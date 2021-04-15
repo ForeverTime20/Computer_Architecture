@@ -20,10 +20,6 @@ package core_pkg;
     parameter ALU_SUB   = 7'b0011001;
     parameter ALU_ADDU  = 7'b0011010;
     parameter ALU_SUBU  = 7'b0011011;
-    parameter ALU_ADDR  = 7'b0011100;
-    parameter ALU_SUBR  = 7'b0011101;
-    parameter ALU_ADDUR = 7'b0011110;
-    parameter ALU_SUBUR = 7'b0011111;
 
     parameter ALU_XOR   = 7'b0101111;
     parameter ALU_OR    = 7'b0101110;
@@ -32,7 +28,6 @@ package core_pkg;
     // Shifts
     parameter ALU_SRA   = 7'b0100100;
     parameter ALU_SRL   = 7'b0100101;
-    parameter ALU_ROR   = 7'b0100110;
     parameter ALU_SLL   = 7'b0100111;
 
     // Sign-/zero-extensions
@@ -57,18 +52,26 @@ package core_pkg;
     parameter ALU_SLETS = 7'b0000110;
     parameter ALU_SLETU = 7'b0000111;
 
+    // Load Upper Immediates
+    parameter ALU_LUI   = 7'b0011100;
+
 // ALU Source Oprands Select
-    // 4-BIT, remain to be fixed
+    // 2-BIT, remain to be fixed
+    parameter ALU_SRC_WIDTH = 2;
+    parameter ALU_SRC_REG = 0;
+    parameter ALU_SRC_IMM = 1;
+    parameter ALU_SRC_PC  = 2;
 
 // Branch Type Operands
     parameter BRCH_OP_WIDTH = 4;
-    parameter BRCH_NOP  = 0;
-    parameter BRCH_BEQ  = 1;
-    parameter BRCH_BNE  = 2;
-    parameter BRCH_BLT  = 3;
-    parameter BRCH_BLTU = 4;
-    parameter BRCH_BGE  = 5;
-    parameter BRCH_BGEU = 6;
+    parameter BRCH_NOP  = 4'b1000;
+    parameter BRCH_BEQ  = 4'b0000;
+    parameter BRCH_BNE  = 4'b0001;
+    parameter BRCH_BLT  = 4'b0100;
+    parameter BRCH_BLTU = 4'b0110;
+    parameter BRCH_BGE  = 4'b0101;
+    parameter BRCH_BGEU = 4'b0111;
+    parameter BRCH_JALR = 4'b1111;
 
 // IF stage
     // PC mux selector defines
@@ -78,4 +81,10 @@ package core_pkg;
 
 // ID stage
 
+// WB stage
+    // Write data select
+    parameter WB_WR_MUX_OP_WIDTH = 2;
+    parameter WB_WR_MUX_ALU = 0;
+    parameter WB_MR_MUX_MEM = 1;
+    parameter WB_WR_MUX_PCINCR = 2;
 endpackage
