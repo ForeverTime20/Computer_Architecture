@@ -73,6 +73,7 @@ module id_stage import core_pkg::*;
     localparam IMM_SB           = 3;
     localparam IMM_U            = 4;
     localparam IMM_UJ           = 5;
+    localparam IMM_FOUR         = 6;
 
 
     logic   [31:0]  instr_raw;
@@ -213,7 +214,7 @@ module id_stage import core_pkg::*;
                 alu_src_2       = ALU_SRC_IMM;
                 regfile_we      = 1'b1;
                 regfile_wr_mux  = WB_WR_MUX_ALU;
-                imm_sel         = IMM_UJ;
+                imm_sel         = IMM_FOUR;
             end
 
             OPCODE_JALR: begin
@@ -312,7 +313,7 @@ module id_stage import core_pkg::*;
                 alu_en          = 1'b1;
                 case(instr[14:12])
                     3'b000: alu_op = ALU_ADD;  // Add Immediate
-                    3'b010: alu_op = ALU_SLTS; // Set to one if Lower Than Immediate
+                    3'b010: alu_op = ALU_SLT;  // Set to one if Lower Than Immediate
                     3'b011: alu_op = ALU_SLTU; // Set to one if Lower Than Immediate Unsigned
                     3'b100: alu_op = ALU_XOR;  // Exclusive Or with Immediate
                     3'b110: alu_op = ALU_OR;   // Or with Immediate
@@ -348,7 +349,7 @@ module id_stage import core_pkg::*;
                     // RV32I ALU operations
                     {6'b00_0000, 3'b000}: alu_op = ALU_ADD;   // Add
                     {6'b10_0000, 3'b000}: alu_op = ALU_SUB;   // Sub
-                    {6'b00_0000, 3'b010}: alu_op = ALU_SLTS;  // Set Lower Than
+                    {6'b00_0000, 3'b010}: alu_op = ALU_SLT;  // Set Lower Than
                     {6'b00_0000, 3'b011}: alu_op = ALU_SLTU;  // Set Lower Than Unsigned
                     {6'b00_0000, 3'b100}: alu_op = ALU_XOR;   // Xor
                     {6'b00_0000, 3'b110}: alu_op = ALU_OR;    // Or
@@ -369,6 +370,12 @@ module id_stage import core_pkg::*;
             default: illegal_instr = 1'b1;
         endcase
     end
+
+//////////////////////////////////////////////////////////
+// handle jumps                                         //
+//////////////////////////////////////////////////////////
+    assign jump_decision_o      = jump_decision;
+    assign jump_target_o        = pc_id + imm_uj_type;
 
 //////////////////////////////////////////////////////////
 // outut to ex                                          //
@@ -393,6 +400,7 @@ module id_stage import core_pkg::*;
             IMM_SB: imm_ex_o = imm_sb_type;
             IMM_U:  imm_ex_o = imm_u_type;
             IMM_UJ: imm_ex_o = imm_uj_type;
+            IMM_FOUR:imm_ex_o= 32'd4;
             default:;
         endcase
     end
