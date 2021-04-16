@@ -348,4 +348,51 @@ module RV32Core import core_pkg::*;
         .regfile_we_o       ( regfile_we        )
     );
 
+  ////////////////////////////////////////////////////////////////////
+  //    ____ ___  _   _ _____ ____   ___  _     _     _____ ____    //
+  //   / ___/ _ \| \ | |_   _|  _ \ / _ \| |   | |   | ____|  _ \   //
+  //  | |  | | | |  \| | | | | |_) | | | | |   | |   |  _| | |_) |  //
+  //  | |__| |_| | |\  | | | |  _ <| |_| | |___| |___| |___|  _ <   //
+  //   \____\___/|_| \_| |_| |_| \_\\___/|_____|_____|_____|_| \_\  //
+  //                                                                //
+  ////////////////////////////////////////////////////////////////////
+    controller 
+    #(
+        .DEBUG              ( DEBUG             )
+    )
+    controller_i
+    (
+        .clk                ( CPU_CLK           ),
+        .rst_n              ( ~CPU_RST          ),
+
+        .jump_decision_i    ( jump_decision     ),
+        .branch_decision_i  ( branch_decision   ),
+        .pc_set_o           ( pc_set            ),
+        .pc_mux_o           ( pc_mux            ),
+
+        .stall_if_o         ( stall_if          ),
+        .stall_id_o         ( stall_id          ),
+        .stall_ex_o         ( stall_ex          ),
+        .stall_mem_o        ( stall_me          ),
+        .stall_wb_o         ( stall_wb          ),
+        .clear_if_o         ( clear_if          ),
+        .clear_id_o         ( clear_id          ),
+        .clear_ex_o         ( clear_ex          ),
+        .clear_mem_o        ( clear_me          ),
+        .clear_wb_o         ( clear_wb          ),
+
+        .rs1_raddr_ex_i     ( rs1_raddr         ),
+        .rs2_raddr_ex_i     ( rs2_raddr         ),
+        .rs1_used_ex_i      ( rs1_used          ),
+        .rs2_used_ex_i      ( rs2_used          ),
+        .mem_req_i          ( mem_req           ),
+        .regfile_waddr_mem_i( regfile_waddr_ctrl_m),
+        .regfile_we_mem_i   ( regfile_we_ctrl_m),
+        .regfile_waddr_wb_i ( regfile_waddr_ctrl_w),
+        .regfile_we_wb_i    ( regfile_we_ctrl_w),
+
+        .rs1_forward_o      ( rs1_forward       ),
+        .rs2_forward_o      ( rs2_forward       )
+    );
+
 endmodule
