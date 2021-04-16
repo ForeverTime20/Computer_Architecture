@@ -122,7 +122,7 @@ generate
         I_RAM I_RAM_i
         (
             .clka           ( clk               ),
-            .addra          ( {pc_if_i[31:2], 2'b00} ),
+            .addra          ( {pc_if_i[17:2]} ),
             .douta          ( instr_raw         )
         );
     end

@@ -104,7 +104,7 @@ generate
         D_RAM D_RAM_i
         (
             .clka           ( clk               ),
-            .addra          ( {mem_addr_i[31:2], 2'b00}),
+            .addra          ( {mem_addr_i[17:2]}),
             .dina           ( mem_wdata_i       ),
             .douta          ( mem_rdata_raw     ),
             .wea            ( {4{mem_we_i & mem_req_i}} & mem_be_i)
