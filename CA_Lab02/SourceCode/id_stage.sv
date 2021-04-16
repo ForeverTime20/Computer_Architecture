@@ -169,6 +169,7 @@ endgenerate
 
     register_file
     #(
+        .DEBUG              ( DEBUG              ),
         .ADDR_WIDTH         ( 5                  ),
         .DATA_WIDTH         ( 32                 )
     )

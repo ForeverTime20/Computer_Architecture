@@ -13,7 +13,8 @@
 module register_file
 #(
     parameter ADDR_WIDTH    = 5,
-    parameter DATA_WIDTH    = 32
+    parameter DATA_WIDTH    = 32,
+    parameter DEBUG         = 0
 )
 (
     // Clock and Reset

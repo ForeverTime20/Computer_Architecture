@@ -11,12 +11,14 @@
 
 module RV32Core import core_pkg::*;
 #(
-    parameter DEBUG             = 0,
+    parameter DEBUG             = 1,
     parameter USE_RAM_IP        = 1
 )
 (
     input   logic           clk,
-    input   logic           rst
+    input   logic           rst,
+
+    output  logic   [15:0]  LED
 
     // // Debug Signals
     // input   logic   [31:0]  CPU_Debug_DataRAM_A2,
@@ -122,6 +124,8 @@ module RV32Core import core_pkg::*;
     assign regfile_wdata_fw_wb  = regfile_wdata;
     assign regfile_waddr_ctrl_w = regfile_waddr;
     assign regfile_we_ctrl_w    = regfile_we;
+
+    assign LED = pc_if[15:0];
 
   //////////////////////////////////////////////////
   //   ___ _____   ____ _____  _    ____ _____    //
