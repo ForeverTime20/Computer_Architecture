@@ -14,7 +14,8 @@
 
 module id_stage import core_pkg::*;
 #(
-    parameter DEBUG        = 0
+    parameter DEBUG        = 0,
+    parameter USE_RAM_IP   = 0
 )
 (
     input   logic           clk,
@@ -116,17 +117,28 @@ module id_stage import core_pkg::*;
     logic           illegal_instr;
     logic   [IMM_OP_WIDTH-1:0]  imm_sel;
 
-
-    // IF-ID Seg Reg
-    InstructionRam InstructionRamInst (
-         .clk    ( clk        ),
-         .addra  ( pc_if_i    ),
-         .douta  ( instr_raw  ),
-         .web    (        ),
-         .addrb  (    ),
-         .dinb   (         ),
-         .doutb  (         )
-     );
+generate
+    if(USE_RAM_IP) begin: GEN_INST_IP
+        I_RAM I_RAM_i
+        (
+            .clka           ( clk               ),
+            .addra          ( {pc_if_i[31:2], 2'b00} ),
+            .douta          ( instr_raw         )
+        );
+    end
+    else begin
+        // IF-ID Seg Reg
+        InstructionRam InstructionRamInst (
+            .clk    ( clk        ),
+            .addra  ( pc_if_i    ),
+            .douta  ( instr_raw  ),
+            .web    ( 1'b0       ),
+            .addrb  ( 32'h0      ),
+             .dinb   ( 32'h0      ),
+            .doutb  (            )
+        );
+    end
+endgenerate
 
     always_ff @( posedge clk ) begin : PC_ID
         if(~stall_id_i)
@@ -225,7 +237,7 @@ module id_stage import core_pkg::*;
                 alu_src_2       = ALU_SRC_IMM;
                 rs1_used        = 1'b1;
                 regfile_we      = 1'b1;
-                regfile_wr_mux  = WB_WR_MUX_PCINCR;
+                regfile_wr_mux  = WB_WR_MUX_ALU;
                 branch_type     = BRCH_JALR;
                 imm_sel         = IMM_I;
             end

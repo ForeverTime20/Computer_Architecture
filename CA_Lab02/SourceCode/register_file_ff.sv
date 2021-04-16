@@ -20,8 +20,6 @@ module register_file
     input  logic         clk,
     input  logic         rst_n,
 
-    input  logic         scan_cg_en_i,
-
     //Read port R1
     input  logic [ADDR_WIDTH-1:0]  raddr_a_i,
     output logic [DATA_WIDTH-1:0]  rdata_a_o,

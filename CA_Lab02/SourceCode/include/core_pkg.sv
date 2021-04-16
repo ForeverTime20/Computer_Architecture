@@ -68,5 +68,4 @@ package core_pkg;
     parameter WB_WR_MUX_OP_WIDTH = 2;
     parameter WB_WR_MUX_ALU = 0;
     parameter WB_WR_MUX_MEM = 1;
-    parameter WB_WR_MUX_PCINCR = 2;
 endpackage

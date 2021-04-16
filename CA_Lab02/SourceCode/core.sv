@@ -11,28 +11,29 @@
 
 module RV32Core import core_pkg::*;
 #(
-    parameter DEBUG             = 0
+    parameter DEBUG             = 0,
+    parameter USE_RAM_IP        = 0
 )
 (
-    input   logic           CPU_CLK,
-    input   logic           CPU_RST,
+    input   logic           clk,
+    input   logic           rst
 
-    // Debug Signals
-    input   logic   [31:0]  CPU_Debug_DataRAM_A2,
-    input   logic   [31:0]  CPU_Debug_DataRAM_WD2,
-    input   logic   [3 :0]  CPU_Debug_DataRAM_WE2,
-    output  logic   [31:0]  CPU_Debug_DataRAM_RD2,
-    input   logic   [31:0]  CPU_Debug_InstRAM_A2,
-    input   logic   [31:0]  CPU_Debug_InstRAM_WD2,
-    input   logic   [3 :0]  CPU_Debug_InstRAM_WE2,
-    output  logic   [31:0]  CPU_Debug_InstRAM_RD2
+    // // Debug Signals
+    // input   logic   [31:0]  CPU_Debug_DataRAM_A2,
+    // input   logic   [31:0]  CPU_Debug_DataRAM_WD2,
+    // input   logic   [3 :0]  CPU_Debug_DataRAM_WE2,
+    // output  logic   [31:0]  CPU_Debug_DataRAM_RD2,
+    // input   logic   [31:0]  CPU_Debug_InstRAM_A2,
+    // input   logic   [31:0]  CPU_Debug_InstRAM_WD2,
+    // input   logic   [3 :0]  CPU_Debug_InstRAM_WE2,
+    // output  logic   [31:0]  CPU_Debug_InstRAM_RD2
 );
 
     logic   [31:0]  pc_if;
     logic   [31:0]  pc_id;
     logic   [31:0]  pc_ex;
     logic   [31:0]  pc_me;
-    logic   [31:0]  pc_wb;
+    // logic   [31:0]  pc_wb; // pc_wb is in WB module
 
     logic           stall_if;
     logic           stall_id;
@@ -136,8 +137,8 @@ module RV32Core import core_pkg::*;
     )
     if_stage_i
     (
-        .clk                ( CPU_CLK           ),
-        .rst_n              ( ~CPU_RST          ),
+        .clk                ( clk           ),
+        .rst_n              ( ~rst          ),
 
         .stall_if_i         ( stall_if          ),
         .clear_if_i         ( clear_if          ),
@@ -162,12 +163,13 @@ module RV32Core import core_pkg::*;
   /////////////////////////////////////////////////
     id_stage
     #(
-        .DEBUG              ( DEBUG             )
+        .DEBUG              ( DEBUG             ),
+        .USE_RAM_IP         ( USE_RAM_IP        )
     )
     id_stage_i
     (
-        .clk                ( CPU_CLK           ),
-        .rst_n              ( ~CPU_RST          ),
+        .clk                ( clk           ),
+        .rst_n              ( ~rst          ),
 
         .stall_id_i         ( stall_id          ),
         .clear_id_i         ( clear_id          ),
@@ -220,8 +222,8 @@ module RV32Core import core_pkg::*;
     )
     ex_stage_i
     (
-        .clk                ( CPU_CLK           ),
-        .rst_n              ( ~CPU_RST          ),
+        .clk                ( clk           ),
+        .rst_n              ( ~rst          ),
 
         .stall_ex_i         ( stall_ex          ),
         .clear_ex_i         ( clear_ex          ),
@@ -282,8 +284,8 @@ module RV32Core import core_pkg::*;
     )
     mem_stage_i
     (
-        .clk                ( CPU_CLK           ),
-        .rst_n              ( ~CPU_RST          ),
+        .clk                ( clk           ),
+        .rst_n              ( ~rst          ),
 
         .stall_mem_i        ( stall_me          ),
         .clear_mem_i        ( clear_me          ),
@@ -323,12 +325,13 @@ module RV32Core import core_pkg::*;
     // WB stage
     wb_stage
     #(
-        .DEBUG              ( DEBUG             )
+        .DEBUG              ( DEBUG             ),
+        .USE_RAM_IP         ( USE_RAM_IP        )
     )
     wb_stage_i
     (
-        .clk                ( CPU_CLK           ),
-        .rst_n              ( ~CPU_RST          ),
+        .clk                ( clk           ),
+        .rst_n              ( ~rst          ),
         
         .stall_wb_i         ( stall_wb          ),
         .clear_wb_i         ( clear_wb          ),
@@ -366,8 +369,8 @@ module RV32Core import core_pkg::*;
     )
     controller_i
     (
-        .clk                ( CPU_CLK           ),
-        .rst_n              ( ~CPU_RST          ),
+        .clk                ( clk           ),
+        .rst_n              ( ~rst          ),
 
         .jump_decision_i    ( jump_decision     ),
         .branch_decision_i  ( branch_decision   ),

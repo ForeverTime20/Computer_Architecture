@@ -16,8 +16,8 @@ module core_tb
 
     RV32Core RV32Core_i
     (
-        .CPU_CLK            ( clk           ),
-        .CPU_RST            ( rst           )
+        .clk            ( clk           ),
+        .rst            ( rst           )
     );
 
 endmodule

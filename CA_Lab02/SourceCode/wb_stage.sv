@@ -13,7 +13,8 @@
 
 module wb_stage import core_pkg::*;
 #(
-    parameter DEBUG             = 0
+    parameter DEBUG             = 0,
+    parameter USE_RAM_IP        = 0
 )
 (
     input   logic           clk,
@@ -97,17 +98,32 @@ module wb_stage import core_pkg::*;
         mem_rdata_old   <= mem_rdata_raw;
     end
     assign mem_rdata = stall_ff ? mem_rdata_old : (clear_ff ? 32'h0 : mem_rdata_raw);
-    DataRam DataRamInst (
-        .clk    ( clk            ),                      //请完善代码
-        .wea    ( {4{mem_we_i}} & mem_be_i ),                      //请完善代码
-        .addra  ( mem_addr_i     ),                      //请完善代码
-        .dina   ( mem_wdata_i    ),                      //请完善代码
-        .douta  ( mem_rdata_raw  )
-        // .web    ( WE2            ),
-        // .addrb  ( A2[31:2]       ),
-        // .dinb   ( WD2            ),
-        // .doutb  ( RD2            )
-    );  
+
+generate
+    if(USE_RAM_IP) begin: GEN_DATA_IP
+        D_RAM D_RAM_i
+        (
+            .clka           ( clk               ),
+            .addra          ( {mem_addr_i[31:2], 2'b00}),
+            .dina           ( mem_wdata_i       ),
+            .douta          ( mem_rdata_raw     ),
+            .wea            ( {4{mem_we_i & mem_req_i}} & mem_be_i)
+        );
+    end
+    else begin
+        DataRam DataRamInst (
+            .clk    ( clk            ), 
+            .wea    ( {4{mem_we_i & mem_req_i}} & mem_be_i ), 
+            .addra  ( mem_addr_i     ), 
+            .dina   ( mem_wdata_i    ), 
+            .douta  ( mem_rdata_raw  ),
+            .web    ( 4'b0           ),
+            .addrb  ( 32'h0          ),
+            .dinb   ( 32'h0          ),
+            .doutb  (                )
+        );  
+    end
+endgenerate
 
     // load data extension
     always_comb begin : MEM_DATA_EXT
