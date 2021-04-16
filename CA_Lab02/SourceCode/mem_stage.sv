@@ -43,6 +43,7 @@ module mem_stage import core_pkg::*;
     output  logic           mem_we_wb_o,
     output  logic   [3 :0]  mem_be_wb_o,
     output  logic   [2 :0]  mem_type_wb_o,
+    output  logic   [31:0]  mem_addr_wb_o,
     output  logic   [31:0]  mem_wdata_wb_o,
     output  logic   [4 :0]  regfile_waddr_wb_o,
     output  logic   [31:0]  regfile_wdata_wb_o,
@@ -133,6 +134,7 @@ module mem_stage import core_pkg::*;
     assign mem_we_wb_o          = mem_we;
     assign mem_be_wb_o          = mem_be;
     assign mem_type_wb_o        = mem_type;
+    assign mem_addr_wb_o        = {alu_result[31:2], 2'b00};
     always_comb begin : MEM_WDATA
         mem_wdata_wb_o = mem_wdata;
         case (mem_be)

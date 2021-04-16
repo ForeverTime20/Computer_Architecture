@@ -274,7 +274,7 @@ module id_stage import core_pkg::*;
                 rs1_used        = 1'b1;
                 mem_req         = 1'b1;
                 regfile_we      = 1'b1;
-                regfile_wr_mux  = WB_MR_MUX_MEM;
+                regfile_wr_mux  = WB_WR_MUX_MEM;
                 imm_sel         = IMM_I;
                 // load size
                 case (instr[14:12])

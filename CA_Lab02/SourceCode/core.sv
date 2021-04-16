@@ -240,6 +240,7 @@ module RV32Core import core_pkg::*;
         .mem_we_wb_o        ( ),
         .mem_be_wb_o        ( ),
         .mem_type_wb_o      ( ),
+        .mem_addr_wb_o      ( ),
         .mem_wdata_wb_o     ( ),
         .regfile_waddr_wb_o ( ),
         .regfile_wdata_wb_o ( ),
@@ -262,7 +263,12 @@ module RV32Core import core_pkg::*;
 
         // From MEM
         .pc_mem_i           ( pc_me             ),
-        .mem_rdata_i        ( ),
+        .mem_req_i          ( ),
+        .mem_we_i           ( ),
+        .mem_be_i           ( ),
+        .mem_type_i         ( ),
+        .mem_addr_i         ( ),
+        .mem_wdata_i        ( ),
         .regfile_waddr_i    ( ),
         .regfile_wdata_i    ( ),
         .regfile_we_i       ( ),
