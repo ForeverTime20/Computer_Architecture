@@ -10,7 +10,7 @@
 // Mother Module Name:                                                        //
 //                 id_stage                                                   //
 ////////////////////////////////////////////////////////////////////////////////
-module cv32e40p_register_file
+module register_file
 #(
     parameter ADDR_WIDTH    = 5,
     parameter DATA_WIDTH    = 32

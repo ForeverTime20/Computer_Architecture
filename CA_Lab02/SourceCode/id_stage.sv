@@ -233,18 +233,19 @@ module id_stage import core_pkg::*;
             OPCODE_BRANCH: begin
                 // Branches
                 alu_en          = 1'b1;
-                alu_src_1       = ALU_SRC_REG;
-                alu_src_2       = ALU_SRC_REG;
+                alu_src_1       = ALU_SRC_PC;
+                alu_src_2       = ALU_SRC_IMM;
+                alu_op          = ALU_ADD;
                 rs1_used        = 1'b1;
                 rs2_used        = 1'b1;
                 branch_type     = {1'b0, instr[14:12]};
                 imm_sel         = IMM_SB;
-                case( {1'b0, instr[14:12]} )
-                    BRCH_BEQ, BRCH_BNE,
-                    BRCH_BGE, BRCH_BLT: alu_op  = ALU_SUB;
-                    BRCH_BGEU,BRCH_BLTU:alu_op  = ALU_SUBU;
-                    default: illegal_instr = 1'b1;
-                endcase
+                // case( {1'b0, instr[14:12]} )
+                //     BRCH_BEQ, BRCH_BNE,
+                //     BRCH_BGE, BRCH_BLT: alu_op  = ALU_SUB;
+                //     BRCH_BGEU,BRCH_BLTU:alu_op  = ALU_SUBU;
+                //     default: illegal_instr = 1'b1;
+                // endcase
             end
 
             OPCODE_STORE: begin

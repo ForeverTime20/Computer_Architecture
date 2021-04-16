@@ -29,15 +29,15 @@ module alu import core_pkg::*;
         case (alu_op)
             ALU_ADD:    result = $signed (op_a) + $signed (op_b);
             ALU_SUB:    result = $signed (op_a) - $signed (op_b);   
-            ALU_SUBU:   result = $Unsigned(op_a)- $Unsigned(op_b);
+            ALU_SUBU:   result = $unsigned(op_a)- $unsigned(op_b);
             ALU_XOR:    result = op_a ^ op_b;
             ALU_OR:     result = op_a | op_b;
             ALU_AND:    result = op_a & op_b;
-            ALU_SRA:    result = $signed(op_a) >>> $Unsigned(op_b[4:0]);
-            ALU_SRL:    result = $Unsigned(op_a) >> $Unsigned(op_b[4:0]);
+            ALU_SRA:    result = $signed(op_a) >>> $unsigned(op_b[4:0]);
+            ALU_SRL:    result = $unsigned(op_a) >> $unsigned(op_b[4:0]);
             ALU_SLL:    result = op_a << op_b[4:0];
             ALU_SLT:    result = $signed(op_a) < $signed(op_b) ? 1 : 0;
-            ALU_SLTU:   result = $Unsigned(op_a) < $Unsigned(op_b) ? 1 : 0;
+            ALU_SLTU:   result = $unsigned(op_a) < $unsigned(op_b) ? 1 : 0;
             ALU_LUI:    result = op_b;
             default: ;
         endcase

@@ -208,37 +208,37 @@ module ex_stage import core_pkg::*;
     );
 
     // handle branches
-    assign branch_target_o = branch_type == BRCH_JALR ? alu_result : pc_ex + imm;
+    assign branch_target_o = alu_result;
     always_comb begin : BRANCH_DECISION
         branch_decision_o = 1'b0;
         case (branch_type)
             BRCH_BEQ: begin
-                if(alu_result == 32'h0)
+                if(rs1_rdata_fw == rs2_rdata_fw)
                     branch_decision_o = 1'b1;
             end 
 
             BRCH_BNE: begin
-                if(alu_result != 32'h0)
+                if(rs1_rdata_fw != rs2_rdata_fw)
                     branch_decision_o = 1'b1;
             end
 
             BRCH_BLT: begin
-                if($signed(alu_result) < 32'h0)
+                if($signed(rs1_rdata_fw) < $signed(rs2_rdata_fw))
                     branch_decision_o = 1'b1;
             end
 
             BRCH_BGE: begin
-                if($signed(alu_result) >= 32'h0)
+                if($signed(rs1_rdata_fw) >= $signed(rs2_rdata_fw))
                     branch_decision_o = 1'b1;
             end
 
             BRCH_BLTU: begin
-                if($signed(alu_result) < 32'h0)
+                if(rs1_rdata_fw < rs2_rdata_fw)
                     branch_decision_o = 1'b1;
             end
 
             BRCH_BGEU: begin
-                if($signed(alu_result) >= 32'h0)
+                if(rs1_rdata_fw >= rs2_rdata_fw)
                     branch_decision_o = 1'b1;
             end
 

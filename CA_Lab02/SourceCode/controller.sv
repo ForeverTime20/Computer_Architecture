@@ -58,9 +58,9 @@ module controller import core_pkg::*;
         // 2'b01: forward mem
         // 2'b10: forward wb
         rs1_forward_o = 2'b00;
-        if(regfile_we_wb_i && rs1_used_ex_i && (regfile_waddr_wb_i == rs1_raddr_ex_i))
+        if(regfile_we_wb_i && rs1_used_ex_i && (regfile_waddr_wb_i == rs1_raddr_ex_i) && (regfile_waddr_wb_i != '0))
             rs1_forward_o = 2'b10;
-        if(regfile_we_mem_i && rs1_used_ex_i && (regfile_waddr_mem_i == rs1_raddr_ex_i))
+        if(regfile_we_mem_i && rs1_used_ex_i && (regfile_waddr_mem_i == rs1_raddr_ex_i) && (regfile_waddr_mem_i != '0))
             rs1_forward_o = 2'b01;
     end
 
@@ -69,9 +69,9 @@ module controller import core_pkg::*;
         // 2'b01: forward mem
         // 2'b10: forward wb
         rs2_forward_o = 2'b00;
-        if(regfile_we_wb_i && rs2_used_ex_i && (regfile_waddr_wb_i == rs2_raddr_ex_i))
+        if(regfile_we_wb_i && rs2_used_ex_i && (regfile_waddr_wb_i == rs2_raddr_ex_i) && (regfile_waddr_wb_i != '0))
             rs2_forward_o = 2'b10;
-        if(regfile_we_mem_i && rs2_used_ex_i && (regfile_waddr_mem_i == rs2_raddr_ex_i))
+        if(regfile_we_mem_i && rs2_used_ex_i && (regfile_waddr_mem_i == rs2_raddr_ex_i) && (regfile_waddr_mem_i != '0))
             rs2_forward_o = 2'b01;
     end
 
@@ -120,6 +120,7 @@ module controller import core_pkg::*;
             stall_if_o  = 1'b1;
             stall_id_o  = 1'b1;
             stall_ex_o  = 1'b1;
+            clear_mem_o = 1'b1;
         end
     end
 

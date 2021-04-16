@@ -111,12 +111,16 @@ module RV32Core import core_pkg::*;
 
     // Forward signals
     logic   [31:0]  regfile_wdata_fw_mem;
-    logic   [31:0]  regfile_wdata_fw_wb = regfile_wdata;
+    logic   [31:0]  regfile_wdata_fw_wb;
     logic   [1 :0]  rs1_forward;
     logic   [1 :0]  rs2_forward;
     // Jumps and Branches
     logic   [31:0]  jump_target;
     logic   [31:0]  branch_target;
+
+    assign regfile_wdata_fw_wb  = regfile_wdata;
+    assign regfile_waddr_ctrl_w = regfile_waddr;
+    assign regfile_we_ctrl_w    = regfile_we;
 
   //////////////////////////////////////////////////
   //   ___ _____   ____ _____  _    ____ _____    //
@@ -173,7 +177,7 @@ module RV32Core import core_pkg::*;
 
         // jumps in id
         .jump_decision_o    ( jump_decision     ),
-        .jump_target_o      ( branch_decision   ),
+        .jump_target_o      ( jump_target       ),
 
         // ID-EX Pipeline
         .pc_id_o            ( pc_id             ),
@@ -266,7 +270,7 @@ module RV32Core import core_pkg::*;
         
         // Forward Data
         .regfile_wdata_mem_i( regfile_wdata_fw_mem),
-        .regfile_wdata_wb_i ( regfile_wdata_fw_wb),
+        .regfile_wdata_wb_i ( regfile_wdata_fw_wb ),
         .rs1_forward_i      ( rs1_forward       ),
         .rs2_forward_i      ( rs2_forward       )
     );

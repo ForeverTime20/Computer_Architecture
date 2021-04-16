@@ -28,7 +28,7 @@
 module InstructionRam(
     input  clk,
     input  web,
-    input  [31:2] addra, addrb,
+    input  [31:0] addra, addrb,
     input  [31:0] dinb,
     output reg [31:0] douta, doutb
 );
