@@ -48,6 +48,9 @@ module id_stage import core_pkg::*;
     output  logic           mem_we_ex_o,
     output  logic   [2 :0]  mem_type_ex_o,
     output  logic   [BRCH_OP_WIDTH-1:0] branch_type_ex_o,
+    output  logic   [CSR_ADDR_WIDTH-1:0] csr_addr_ex_o,
+    output  logic   [2 :0]  csr_type_ex_o,
+    output  logic           csr_we_ex_o,   
 
     input   logic   [4 :0]  regfile_waddr_wb_i,
     input   logic           regfile_we_wb_i,
@@ -75,6 +78,7 @@ module id_stage import core_pkg::*;
     localparam IMM_U            = 4;
     localparam IMM_UJ           = 5;
     localparam IMM_FOUR         = 6;
+    localparam IMM_Z            = 7;
 
 
     logic   [31:0]  instr_raw;
@@ -92,6 +96,7 @@ module id_stage import core_pkg::*;
     logic   [31:0]  rs2_rdata;
     logic   [31:0]  imm_i_type;
     logic   [31:0]  imm_iz_type;
+    logic   [31:0]  imm_z_type;
     logic   [31:0]  imm_s_type;
     logic   [31:0]  imm_sb_type;
     logic   [31:0]  imm_u_type;
@@ -112,6 +117,9 @@ module id_stage import core_pkg::*;
     logic           regfile_we;
     logic   [WB_WR_MUX_OP_WIDTH-1:0]  regfile_wr_mux;
     logic   [BRCH_OP_WIDTH-1:0] branch_type;
+    logic   [CSR_ADDR_WIDTH-1:0] csr_addr;
+    logic   [2 :0]  csr_type;
+    logic           csr_we;
 
     // control signals only in ID
     logic           illegal_instr;
@@ -161,11 +169,13 @@ endgenerate
     assign  rs2_raddr   = instr[REG_S2_MSB:REG_S2_LSB];
     assign  imm_i_type  = { {20 {instr[31]}}, instr[31:20] };
     assign  imm_iz_type = {            20'b0, instr[31:20] };
+    assign  imm_z_type  = {            27'b0, instr[19:15] };
     assign  imm_s_type  = { {20 {instr[31]}}, instr[31:25], instr[11:7] };
     assign  imm_sb_type = { {19 {instr[31]}}, instr[31], instr[7], instr[30:25], instr[11:8], 1'b0 };
     assign  imm_u_type  = { instr[31:12], 12'b0 };
     assign  imm_uj_type = { {12 {instr[31]}}, instr[19:12], instr[20], instr[30:21], 1'b0 };
     assign  regfile_waddr=instr[REG_D_MSB:REG_D_LSB];
+    assign  csr_addr    = instr[31:20];
 
     register_file
     #(
@@ -214,6 +224,8 @@ endgenerate
         regfile_we      = 1'b0;
         regfile_wr_mux  = '0;
         branch_type     = BRCH_NOP;
+        csr_type        = CSR_NONE;
+        csr_we          = 1'b0;
 
         illegal_instr   = 1'b0;
         imm_sel         = '0;
@@ -381,6 +393,56 @@ endgenerate
                 regfile_wr_mux  = WB_WR_MUX_ALU;
             end
 
+            OPCODE_SYSTEM: begin
+                // CSR operations
+                csr_type = instr[14:12];
+                csr_we   = 1'b1;
+                case (instr[14:12])
+                    CSR_RC: begin
+                        alu_en          = 1'b1;
+                        alu_op          = ALU_AND;
+                        alu_src_1       = ALU_SRC_REG;
+                        alu_src_2       = ALU_SRC_CSR;
+                        rs1_used        = 1'b1;
+                    end
+
+                    CSR_RCI: begin
+                        alu_en          = 1'b1;
+                        alu_op          = ALU_AND;
+                        alu_src_1       = ALU_SRC_IMM;
+                        alu_src_2       = ALU_SRC_CSR;
+                        imm_sel         = IMM_Z;
+                    end
+
+                    CSR_RS: begin
+                        alu_en          = 1'b1;
+                        alu_op          = ALU_OR;
+                        alu_src_1       = ALU_SRC_REG;
+                        alu_src_2       = ALU_SRC_CSR;
+                        rs1_used        = 1'b1;
+                    end
+
+                    CSR_RSI: begin
+                        alu_en          = 1'b1;
+                        alu_op          = ALU_OR;
+                        alu_src_1       = ALU_SRC_IMM;
+                        alu_src_2       = ALU_SRC_CSR;
+                        imm_sel         = IMM_Z;
+                    end
+
+                    CSR_RW: begin
+                        // nothing to do here
+                    end
+
+                    CSR_RWI: begin
+                        imm_sel         = IMM_Z;
+                    end
+                    default: ;
+                endcase
+                regfile_we      = 1'b1;
+                regfile_wr_mux  = WB_WR_MUX_ALU;
+            end
+
             default: illegal_instr = 1'b1;
         endcase
     end
@@ -410,6 +472,7 @@ endgenerate
         case(imm_sel)
             IMM_I:  imm_ex_o = imm_i_type;
             IMM_IZ: imm_ex_o = imm_iz_type;
+            IMM_Z:  imm_ex_o = imm_z_type;
             IMM_S:  imm_ex_o = imm_s_type;
             IMM_SB: imm_ex_o = imm_sb_type;
             IMM_U:  imm_ex_o = imm_u_type;
@@ -425,6 +488,8 @@ endgenerate
     assign mem_we_ex_o          = mem_we;
     assign mem_type_ex_o          = mem_type;
     assign branch_type_ex_o     = branch_type;
-
+    assign csr_addr_ex_o        = csr_addr;
+    assign csr_type_ex_o        = csr_type;
+    assign csr_we_ex_o          = csr_we;
 
 endmodule

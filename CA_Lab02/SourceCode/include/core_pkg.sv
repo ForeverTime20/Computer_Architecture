@@ -43,6 +43,7 @@ package core_pkg;
     parameter ALU_SRC_REG = 0;
     parameter ALU_SRC_IMM = 1;
     parameter ALU_SRC_PC  = 2;
+    parameter ALU_SRC_CSR = 3;
 
 // Branch Type Operands
     parameter BRCH_OP_WIDTH = 4;
@@ -54,6 +55,18 @@ package core_pkg;
     parameter BRCH_BGE  = 4'b0101;
     parameter BRCH_BGEU = 4'b0111;
     parameter BRCH_JALR = 4'b1111;
+
+// CSRs
+    parameter CSR_NUM   = 2**12;
+    parameter CSR_XLEN  = 32;
+    parameter CSR_ADDR_WIDTH = (CSR_NUM > 1) ? $clog2(CSR_NUM) : 1;
+    parameter CSR_NONE  = 3'b000;
+    parameter CSR_RC    = 3'b011;
+    parameter CSR_RCI   = 3'b111;
+    parameter CSR_RS    = 3'b010;
+    parameter CSR_RSI   = 3'b110;
+    parameter CSR_RW    = 3'b001;
+    parameter CSR_RWI   = 3'b101;
 
 // IF stage
     // PC mux selector defines

@@ -69,6 +69,9 @@ module RV32Core import core_pkg::*;
     logic           mem_we_ex;
     logic   [2 :0]  mem_type_ex;
     logic   [BRCH_OP_WIDTH-1:0] branch_type_ex;
+    logic   [CSR_ADDR_WIDTH-1:0] csr_addr_ex;
+    logic   [2 :0]  csr_type_ex;
+    logic           csr_we_ex;
 
     // EX-MEM
     logic   [31:0]  alu_result_mem;
@@ -205,6 +208,9 @@ module RV32Core import core_pkg::*;
         .mem_we_ex_o        ( mem_we_ex         ),
         .mem_type_ex_o      ( mem_type_ex       ),
         .branch_type_ex_o   ( branch_type_ex    ),
+        .csr_addr_ex_o      ( csr_addr_ex       ),
+        .csr_we_ex_o        ( csr_we_ex         ),
+        .csr_type_ex_o      ( csr_type_ex       ),
 
         // From WB stage
         .regfile_waddr_wb_i ( regfile_waddr     ),
@@ -252,6 +258,9 @@ module RV32Core import core_pkg::*;
         .mem_we_i           ( mem_we_ex         ),
         .mem_type_i         ( mem_type_ex       ),
         .branch_type_i      ( branch_type_ex    ),
+        .csr_addr_i         ( csr_addr_ex       ),
+        .csr_type_i         ( csr_type_ex       ),
+        .csr_we_i           ( csr_we_ex         ),
 
         // handle branches
         .branch_decision_o  ( branch_decision   ),

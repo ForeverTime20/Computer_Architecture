@@ -58,7 +58,7 @@ module register_file
     endgenerate
 
     // WRITE
-    genvar i, l;
+    genvar i;
     generate
         always_ff @( posedge clk or negedge rst_n ) begin : R0
             if(~rst_n) begin

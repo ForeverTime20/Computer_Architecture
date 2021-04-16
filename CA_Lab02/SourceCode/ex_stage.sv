@@ -42,6 +42,9 @@ module ex_stage import core_pkg::*;
     input   logic           mem_we_i,
     input   logic   [2 :0]  mem_type_i,
     input   logic   [BRCH_OP_WIDTH-1:0] branch_type_i,
+    input   logic   [CSR_ADDR_WIDTH-1:0] csr_addr_i,
+    input   logic   [2 :0]  csr_type_i,
+    input   logic           csr_we_i,
 
     // handle branches
     output  logic           branch_decision_o,
@@ -91,12 +94,19 @@ module ex_stage import core_pkg::*;
     logic           mem_we;
     logic   [2 :0]  mem_type;
     logic   [BRCH_OP_WIDTH-1:0] branch_type;
+    logic   [CSR_ADDR_WIDTH-1:0] csr_addr;
+    logic   [2 :0]  csr_type;
+    logic           csr_we;
 
     // datapath signals in EX
     logic   [31:0]  rs1_rdata_fw;
     logic   [31:0]  rs2_rdata_fw;
     logic   [31:0]  alu_operand_a;
     logic   [31:0]  alu_operand_b;
+    logic   [CSR_ADDR_WIDTH-1:0] csr_raddr_a;
+    logic   [CSR_XLEN-1:0] csr_rdata_a;
+    logic   [CSR_ADDR_WIDTH-1:0] csr_waddr_a;
+    logic   [CSR_XLEN-1:0] csr_wdata_a;
 
     // signals for EX-MEM Pipeline
     logic   [31:0]  alu_result;
@@ -122,8 +132,11 @@ module ex_stage import core_pkg::*;
             regfile_wr_mux      <= '0;
             mem_req             <= 1'b0;
             mem_we              <= 1'b0;
-            mem_type              <= '0;
+            mem_type            <= '0;
             branch_type         <= BRCH_NOP;
+            csr_addr            <= '0;
+            csr_type            <= CSR_NONE;
+            csr_we              <= 1'b0;
         end
         else if(~stall_ex_i) begin
             // unstall whole pipeline
@@ -144,8 +157,11 @@ module ex_stage import core_pkg::*;
             regfile_wr_mux      <= regfile_wr_mux_i;
             mem_req             <= mem_req_i;
             mem_we              <= mem_we_i;
-            mem_type              <= mem_type_i;
+            mem_type            <= mem_type_i;
             branch_type         <= branch_type_i;
+            csr_addr            <= csr_addr_i;
+            csr_type            <= csr_type_i;
+            csr_we              <= csr_we_i;
         end
     end
 
@@ -175,6 +191,7 @@ module ex_stage import core_pkg::*;
             ALU_SRC_REG:    alu_operand_a = rs1_rdata_fw;
             ALU_SRC_PC:     alu_operand_a = pc_ex;
             ALU_SRC_IMM:    alu_operand_a = imm;
+            ALU_SRC_CSR:    alu_operand_a = 
             default: ;
         endcase
     end
@@ -249,6 +266,39 @@ module ex_stage import core_pkg::*;
         endcase
     end
 
+  //////////////////////////////////////
+  //        ____ ____  ____           //
+  //       / ___/ ___||  _ \ ___      //
+  //      | |   \___ \| |_) / __|     //
+  //      | |___ ___) |  _ <\__ \     //
+  //       \____|____/|_| \_\___/     //
+  //                                  //
+  //   Control and Status Registers   //
+  //////////////////////////////////////
+    assign csr_raddr_a  = csr_addr;
+    assign csr_waddr_a  = csr_addr;
+    
+    csr_registers
+    #(
+        .DEBUG              ( DEBUG             ),
+        .XLEN               ( CSR_XLEN          ),
+        .CSR_NUM            ( CSR_NUM           ),
+    )
+    (
+        .clk                ( clk               ),
+        .rst_n              ( rst_n             ),
+        
+        .raddr_a_i          ( csr_raddr_a       ),
+        .rdata_a_o          ( csr_rdata_a       ),
+
+        .raddr_b_i          ( ),
+        .rdata_b_o          ( ),
+
+        .waddr_a_i          ( csr_waddr_a       ),
+        .wdata_a_i          ( csr_wdata_a       ),
+        .we_a_i             ( csr_we            )    
+    );
+
     // goto controller
     assign rs1_raddr_o = rs1_raddr;
     assign rs2_raddr_o = rs2_raddr;
@@ -257,6 +307,7 @@ module ex_stage import core_pkg::*;
 
     // output to mem stage
     assign pc_ex_o              = pc_ex;
+    // alert: in some cases, alu_result output is not really from alu
     assign alu_result_mem_o     = branch_type == BRCH_JALR ? pc_ex + 32'd4 : alu_result;
     assign regfile_waddr_mem_o  = regfile_waddr;
     assign regfile_we_mem_o     = regfile_we;
