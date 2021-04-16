@@ -30,23 +30,20 @@
 module DataRam(
     input  clk,
     input  [ 3:0] wea, web,
-    input  [31:2] addra, addrb,
+    input  [31:0] addra, addrb,
     input  [31:0] dina , dinb,
     output reg [31:0] douta, doutb
 );
 initial begin douta=0; doutb=0; end
+parameter INSTRUCTION_STREAM_FILE = "E:\\Users\\ForeverTime Ken\\Documents\\GitHub\\Computer_Architechture\\CA_Lab02\\Simulation\\testB_InstructionStream.txt";
+wire addra_valid = ( addra[31:18]==14'h0 );
+wire addrb_valid = ( addrb[31:18]==14'h0 );
+wire [15:0] addral = addra[17:2];
+wire [15:0] addrbl = addrb[17:2];
 
-wire addra_valid = ( addra[31:14]==18'h0 );
-wire addrb_valid = ( addrb[31:14]==18'h0 );
-wire [11:0] addral = addra[13:2];
-wire [11:0] addrbl = addrb[13:2];
+reg [31:0] ram_cell [0:65535];
 
-reg [31:0] ram_cell [0:4095];
-
-initial begin    // 可以把测试数据手动输入此处
-    ram_cell[0] = 32'h00000000;
-    // ......
-end
+initial $readmemh(INSTRUCTION_STREAM_FILE, ram_cell);
 
 always @ (posedge clk)
     douta <= addra_valid ? ram_cell[addral] : 0;
