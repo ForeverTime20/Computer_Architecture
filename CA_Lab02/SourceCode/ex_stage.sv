@@ -284,7 +284,7 @@ module ex_stage import core_pkg::*;
     always_comb begin :CSR_WDATA
         csr_wdata_a = alu_result;
         case (csr_type)
-            CSR_RC:  csr_waddr_a = csr_rdata_b & {~rs1_rdata_fw};
+            CSR_RC:  csr_wdata_a = csr_rdata_b & {~rs1_rdata_fw};
             CSR_RCI: csr_wdata_a = csr_rdata_b & {27'b1, {~imm[4:0]}};
             CSR_RSI: csr_wdata_a = csr_rdata_b | {27'b0, imm[4:0]};
             CSR_RW:  csr_wdata_a = rs1_rdata_fw;
