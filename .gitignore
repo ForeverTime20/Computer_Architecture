@@ -1,0 +1,15 @@
+# *.*
+# !*.md
+# !*.pdf
+# !*.sv
+# !*.c
+# !*.s
+# !*.S
+# !*.v
+# !*.data
+# !*.inst
+# !*.txt
+# !*.h
+# 
+/CA_Lab02/SourceCode/Xilinx_IP/
+/CA_Lab02/Vivado/
