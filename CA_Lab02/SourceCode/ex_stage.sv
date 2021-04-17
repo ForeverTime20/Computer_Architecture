@@ -105,6 +105,8 @@ module ex_stage import core_pkg::*;
     logic   [31:0]  alu_operand_b;
     logic   [CSR_ADDR_WIDTH-1:0] csr_raddr_a;
     logic   [CSR_XLEN-1:0] csr_rdata_a;
+    logic   [CSR_ADDR_WIDTH-1:0] csr_raddr_b;
+    logic   [CSR_XLEN-1:0] csr_rdata_b;
     logic   [CSR_ADDR_WIDTH-1:0] csr_waddr_a;
     logic   [CSR_XLEN-1:0] csr_wdata_a;
 
@@ -191,7 +193,7 @@ module ex_stage import core_pkg::*;
             ALU_SRC_REG:    alu_operand_a = rs1_rdata_fw;
             ALU_SRC_PC:     alu_operand_a = pc_ex;
             ALU_SRC_IMM:    alu_operand_a = imm;
-            ALU_SRC_CSR:    alu_operand_a = 
+            ALU_SRC_CSR:    alu_operand_a = csr_rdata_a;
             default: ;
         endcase
     end
@@ -202,6 +204,7 @@ module ex_stage import core_pkg::*;
             ALU_SRC_REG:    alu_operand_b = rs2_rdata_fw;
             ALU_SRC_PC:     alu_operand_b = pc_ex;
             ALU_SRC_IMM:    alu_operand_b = imm; 
+            ALU_SRC_CSR:    alu_operand_b = csr_rdata_b;
             default: ;
         endcase
     end
@@ -276,14 +279,26 @@ module ex_stage import core_pkg::*;
   //   Control and Status Registers   //
   //////////////////////////////////////
     assign csr_raddr_a  = csr_addr;
+    assign csr_raddr_b  = csr_addr;
     assign csr_waddr_a  = csr_addr;
-    
+    always_comb begin :CSR_WDATA
+        csr_wdata_a = alu_result;
+        case (csr_type)
+            CSR_RC:  csr_waddr_a = csr_rdata_b & {~rs1_rdata_fw};
+            CSR_RCI: csr_wdata_a = csr_rdata_b & {27'b1, {~imm[4:0]}};
+            CSR_RSI: csr_wdata_a = csr_rdata_b | {27'b0, imm[4:0]};
+            CSR_RW:  csr_wdata_a = rs1_rdata_fw;
+            CSR_RWI: csr_wdata_a = imm;
+            default: ;
+        endcase
+    end
     csr_registers
     #(
         .DEBUG              ( DEBUG             ),
         .XLEN               ( CSR_XLEN          ),
-        .CSR_NUM            ( CSR_NUM           ),
+        .CSR_NUM            ( CSR_NUM           )
     )
+    csr_registers_i
     (
         .clk                ( clk               ),
         .rst_n              ( rst_n             ),
@@ -291,8 +306,8 @@ module ex_stage import core_pkg::*;
         .raddr_a_i          ( csr_raddr_a       ),
         .rdata_a_o          ( csr_rdata_a       ),
 
-        .raddr_b_i          ( ),
-        .rdata_b_o          ( ),
+        .raddr_b_i          ( csr_raddr_b       ),
+        .rdata_b_o          ( csr_rdata_b       ),
 
         .waddr_a_i          ( csr_waddr_a       ),
         .wdata_a_i          ( csr_wdata_a       ),
@@ -308,7 +323,7 @@ module ex_stage import core_pkg::*;
     // output to mem stage
     assign pc_ex_o              = pc_ex;
     // alert: in some cases, alu_result output is not really from alu
-    assign alu_result_mem_o     = branch_type == BRCH_JALR ? pc_ex + 32'd4 : alu_result;
+    assign alu_result_mem_o     = csr_type == CSR_NONE ? (branch_type == BRCH_JALR ? pc_ex + 32'd4 : alu_result) : csr_rdata_b;
     assign regfile_waddr_mem_o  = regfile_waddr;
     assign regfile_we_mem_o     = regfile_we;
     assign regfile_wr_mux_mem_o = regfile_wr_mux;

@@ -431,7 +431,7 @@ endgenerate
                     end
 
                     CSR_RW: begin
-                        // nothing to do here
+                        rs1_used        = 1'b1;
                     end
 
                     CSR_RWI: begin
