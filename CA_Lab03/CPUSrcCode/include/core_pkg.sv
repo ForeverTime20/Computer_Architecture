@@ -57,7 +57,7 @@ package core_pkg;
     parameter BRCH_JALR = 4'b1111;
 
 // CSRs
-    parameter CSR_NUM   = 2**12;
+    parameter CSR_NUM   = 2**5;
     parameter CSR_XLEN  = 32;
     parameter CSR_ADDR_WIDTH = (CSR_NUM > 1) ? $clog2(CSR_NUM) : 1;
     parameter CSR_NONE  = 3'b000;

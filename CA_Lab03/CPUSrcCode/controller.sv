@@ -130,11 +130,12 @@ module controller import core_pkg::*;
             clear_id_o  = 1'b0;
             clear_ex_o  = 1'b0;
             clear_mem_o = 1'b0;
+            clear_wb_o  = 1'b0;
             stall_if_o  = 1'b1;
             stall_id_o  = 1'b1;
             stall_ex_o  = 1'b1;
             stall_mem_o = 1'b1;
-            clear_wb_o  = 1'b1;
+            stall_wb_o  = 1'b1;
         end
     end
 

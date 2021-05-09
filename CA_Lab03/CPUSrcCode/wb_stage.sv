@@ -98,7 +98,8 @@ module wb_stage import core_pkg::*;
     always_ff @( posedge clk ) begin : STALL_CLEAR_WB
         stall_ff        <= stall_wb_i;
         clear_ff        <= clear_wb_i;
-        mem_rdata_old   <= mem_rdata_raw;
+        if((~stall_ff) & (stall_wb_i))
+            mem_rdata_old   <= mem_rdata_raw;
     end
     assign mem_rdata = stall_ff ? mem_rdata_old : (clear_ff ? 32'h0 : mem_rdata_raw);
 
@@ -120,7 +121,7 @@ generate
             .LINE_ADDR_LEN  ( 3                 ),
             .SET_ADDR_LEN   ( 4                 ),
             .TAG_ADDR_LEN   ( 4                 ),
-            .WAY_CNT        ( 1                 )  
+            .WAY_CNT        ( 2                 )  
         )data_cache_i
         (
             .clk            ( clk               ),

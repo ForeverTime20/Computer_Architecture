@@ -157,7 +157,8 @@ endgenerate
     always_ff @( posedge clk ) begin : SYN_ID_INSTR
         stall_ff    <= stall_id_i;
         clear_ff    <= clear_id_i;
-        instr_old   <= instr_raw;
+        if((~stall_ff) & (stall_id_i))
+            instr_old   <= instr_raw;
     end
 
     assign  instr   = stall_ff ? instr_old : (clear_ff ? 32'h0000_0013 : instr_raw);
