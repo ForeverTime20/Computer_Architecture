@@ -7267,7 +7267,7 @@ always @ (posedge clk or posedge rst)
 
 cache #(
     .LINE_ADDR_LEN  ( 3             ),
-    .SET_ADDR_LEN   ( 2             ),
+    .SET_ADDR_LEN   ( 8             ),//2
     .TAG_ADDR_LEN   ( 12            ),
     .WAY_CNT        ( 3             )
 ) cache_test_instance (
