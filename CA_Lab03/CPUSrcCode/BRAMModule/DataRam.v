@@ -35,13 +35,13 @@ module DataRam(
     output reg [31:0] douta, doutb
 );
 initial begin douta=0; doutb=0; end
-parameter INSTRUCTION_STREAM_FILE = "E:\\Users\\ForeverTime Ken\\Documents\\GitHub\\Computer_Architechture\\CA_Lab02\\Simulation\\CSRtest.data";
+parameter INSTRUCTION_STREAM_FILE = "E:\\Users\\ForeverTime Ken\\Documents\\GitHub\\Computer_Architechture\\CA_Lab02\\Simulation\\testB_InstructionStream.txt";
 wire addra_valid = ( addra[31:18]==14'h0 );
 wire addrb_valid = ( addrb[31:18]==14'h0 );
 wire [15:0] addral = addra[17:2];
 wire [15:0] addrbl = addrb[17:2];
 
-reg [31:0] ram_cell [0:65535];
+reg [31:0] ram_cell [0:1024];
 
 // initial $readmemh(INSTRUCTION_STREAM_FILE, ram_cell);
 initial begin

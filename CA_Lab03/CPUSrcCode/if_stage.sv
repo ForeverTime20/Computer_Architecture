@@ -48,12 +48,6 @@ module if_stage import core_pkg::*;
 
     always_comb begin : NEXT_PC
         pc_n    = pc_q + 32'h4;
-        if(stall_if_i)
-            pc_n = pc_q;
-        
-        if(clear_if_i)
-            pc_n = 32'h0;
-
         if(pc_set_i) begin
             case(pc_mux_i)
             PC_BOOT:    pc_n = boot_addr_i;
@@ -62,6 +56,12 @@ module if_stage import core_pkg::*;
             default:;
             endcase
         end
+        if(stall_if_i)
+            pc_n = pc_q;
+        
+        if(clear_if_i)
+            pc_n = 32'h0;
+
     end
 
     assign  pc_if_o = pc_q;
