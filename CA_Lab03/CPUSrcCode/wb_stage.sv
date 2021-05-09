@@ -38,7 +38,9 @@ module wb_stage import core_pkg::*;
 
     output  logic   [4 :0]  regfile_waddr_o,
     output  logic   [31:0]  regfile_wdata_o,
-    output  logic           regfile_we_o
+    output  logic           regfile_we_o,
+
+    output  logic           miss
 );
 
     // MEM-WB Pipeline regs
@@ -102,6 +104,7 @@ module wb_stage import core_pkg::*;
 
 generate
     if(USE_RAM_IP) begin: GEN_DATA_IP
+        assign miss = 0;
         D_RAM D_RAM_i
         (
             .clka           ( clk               ),
@@ -111,7 +114,28 @@ generate
             .wea            ( {4{mem_we_i & mem_req_i}} & mem_be_i)
         );
     end
+    else if(USE_CACHE) begin
+        cache
+        #(
+            .LINE_ADDR_LEN  ( 3                 ),
+            .SET_ADDR_LEN   ( 4                 ),
+            .TAG_ADDR_LEN   ( 4                 ),
+            .WAY_CNT        ( 1                 )  
+        )data_cache_i
+        (
+            .clk            ( clk               ),
+            .rst            ( ~rst_n            ),
+
+            .miss           ( miss              ),
+            .addr           ( mem_addr_i        ),
+            .rd_req         ( mem_req_i & (~mem_we_i)),
+            .rd_data        ( mem_rdata_raw     ),
+            .wr_req         ( mem_req_i & mem_we_i),
+            .wr_data        ( mem_wdata_i       )
+        );
+    end
     else begin
+        assign miss = 0;
         DataRam DataRamInst (
             .clk    ( clk            ), 
             .wea    ( {4{mem_we_i & mem_req_i}} & mem_be_i ), 

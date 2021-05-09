@@ -50,7 +50,9 @@ module controller import core_pkg::*;
 
     // forward signals
     output  logic   [1 :0]  rs1_forward_o,
-    output  logic   [1 :0]  rs2_forward_o
+    output  logic   [1 :0]  rs2_forward_o,
+
+    input   logic           mem_miss_i
 );
 
     // forward 1
@@ -121,6 +123,18 @@ module controller import core_pkg::*;
             stall_id_o  = 1'b1;
             stall_ex_o  = 1'b1;
             clear_mem_o = 1'b1;
+        end
+
+        if(mem_miss_i) begin
+            clear_if_o  = 1'b0;
+            clear_id_o  = 1'b0;
+            clear_ex_o  = 1'b0;
+            clear_mem_o = 1'b0;
+            stall_if_o  = 1'b1;
+            stall_id_o  = 1'b1;
+            stall_ex_o  = 1'b1;
+            stall_mem_o = 1'b1;
+            clear_wb_o  = 1'b1;
         end
     end
 

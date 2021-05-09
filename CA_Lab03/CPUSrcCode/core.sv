@@ -115,6 +115,7 @@ module RV32Core import core_pkg::*;
     logic           regfile_we_ctrl_m;
     logic   [4 :0]  regfile_waddr_ctrl_w;
     logic           regfile_we_ctrl_w;
+    logic           mem_miss;
 
     // Forward signals
     logic   [31:0]  regfile_wdata_fw_mem;
@@ -368,7 +369,9 @@ module RV32Core import core_pkg::*;
         // out
         .regfile_waddr_o    ( regfile_waddr     ),
         .regfile_wdata_o    ( regfile_wdata     ),
-        .regfile_we_o       ( regfile_we        )
+        .regfile_we_o       ( regfile_we        ),
+
+        .miss               ( mem_miss          )
     );
 
   ////////////////////////////////////////////////////////////////////
@@ -415,7 +418,9 @@ module RV32Core import core_pkg::*;
         .regfile_we_wb_i    ( regfile_we_ctrl_w),
 
         .rs1_forward_o      ( rs1_forward       ),
-        .rs2_forward_o      ( rs2_forward       )
+        .rs2_forward_o      ( rs2_forward       ),
+
+        .mem_miss_i         ( mem_miss          )
     );
 
 endmodule

@@ -7,9 +7,9 @@ module cpu_tb();
     always  #2 clk = ~clk;
     initial #8 rst = 1'b0;
     
-    RV32ICore RV32ICore_tb_inst(
-        .CPU_CLK    ( clk          ),
-        .CPU_RST    ( rst          )
+    RV32Core RV32ICore_tb_inst(
+        .clk    ( clk          ),
+        .rst    ( rst          )
     );
     
 endmodule
