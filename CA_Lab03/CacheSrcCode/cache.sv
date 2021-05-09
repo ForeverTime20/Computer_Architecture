@@ -76,10 +76,10 @@ module cache #(
                     for(l = 0;l < WAY_CNT; l++) begin
                         cache_tags[k][l]    <= '0;
                         valid[k][l]         <= '0;
-                        dirty[k][l]         <= '0;
-                        for(m = 0;m < LINE_SIZE; m++) begin
-                            cache_mem[k][l][m] <='0;
-                        end
+                        // dirty[k][l]         <= '0;
+                        // for(m = 0;m < LINE_SIZE; m++) begin
+                        //     cache_mem[k][l][m] <='0;
+                        // end
                     end
                 end
             end
