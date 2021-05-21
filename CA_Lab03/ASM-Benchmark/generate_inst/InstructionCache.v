@@ -17,9 +17,8 @@ module InstructionCache(
 
 
     initial begin
-        data = 32'h0;
-        debug_data = 32'h0;
-        inst_cache[       0] = 32'h00404713;
+        // matrix 8
+        inst_cache[       0] = 32'h00304713;
         inst_cache[       1] = 32'h00404693;
         inst_cache[       2] = 32'h00e696b3;
         inst_cache[       3] = 32'h00004633;
@@ -58,7 +57,7 @@ module InstructionCache(
         inst_cache[      36] = 32'h00430313;
         inst_cache[      37] = 32'hfe534ce3;
         inst_cache[      38] = 32'h0000006f;
-end
+    end
 
     always@(posedge clk)
     begin

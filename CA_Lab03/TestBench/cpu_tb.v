@@ -4,6 +4,7 @@ module cpu_tb();
     reg clk = 1'b1;
     reg rst = 1'b1;
     
+    reg [63:0] clk_counts;
     reg [63:0] cache_reqs;
     reg [63:0] cache_misses;
     reg [31:0] pc_old;
@@ -12,13 +13,16 @@ module cpu_tb();
     
     always  #2 clk = ~clk;
     initial #8 rst = 1'b0;
-    initial cache_reqs = 32'h0;
-    initial cache_misses = 32'h0;
+    initial cache_reqs = 64'h0;
+    initial cache_misses = 64'h0;
+    initial clk_counts = 64'h0;
 
     assign cache_req = core_i.mem_req_wb;
     assign cache_miss = core_i.mem_miss;
     always@(posedge clk) begin
         pc_old <= core_i.pc_me;
+        if(!rst)
+            clk_counts <= clk_counts + 1;
         if(pc_old != core_i.pc_me && cache_req)
             cache_reqs <= cache_reqs + 1;
         if(pc_old != core_i.pc_me && cache_miss)
