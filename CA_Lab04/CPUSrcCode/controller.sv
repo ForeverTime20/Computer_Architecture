@@ -13,7 +13,9 @@
 
 module controller import core_pkg::*;
 #(
-    parameter DEBUG         = 0
+    parameter DEBUG         = 0,
+    parameter USE_BTB       = 0,
+    parameter USE_BHT       = 0
 )
 (
     input   logic           clk,
@@ -22,8 +24,15 @@ module controller import core_pkg::*;
     // branches and jumps
     input   logic           jump_decision_i,
     input   logic           branch_decision_i,
+    input   logic           branch_prediction_i,
+    input   logic           branch_in_ex_i,
     output  logic           pc_set_o,
     output  logic   [3 :0]  pc_mux_o,
+    // branch predictions
+    output  logic           btb_pc_we_o,
+    output  logic           btb_pc_clear_o,
+    output  logic           bht_branch_prediction_o,
+    output  logic           bht_we_o,
 
     // pipeline stall, clear signals
     output  logic           stall_if_o,
@@ -77,66 +86,150 @@ module controller import core_pkg::*;
             rs2_forward_o = 2'b01;
     end
 
-    // branches and jumps
-    always_comb begin : PC_SET_MUX
-        // priority increases
-        pc_set_o    = 1'b0;
-        pc_mux_o    = PC_BOOT;
-        if(jump_decision_i) begin
-            pc_set_o    = 1'b1;
-            pc_mux_o    = PC_JUMP;
+generate
+    if(USE_BTB && !USE_BHT) begin
+        // only use branch target buffer
+        // branches and jumps
+        always_comb begin: PC_SET_MUX
+            btb_pc_we_o     = 1'b0;
+            btb_pc_clear_o  = 1'b0;
+            pc_set_o        = 1'b0;
+            pc_mux_o        = PC_BOOT;
+            if(jump_decision_i) begin
+                pc_set_o    = 1'b1;
+                pc_mux_o    = PC_JUMP;
+            end
+            if(branch_in_ex_i && branch_decision_i && !branch_prediction_i) begin
+                // branch happened but btb did'nt precicted
+                // write branch pc, branch target to btb
+                // wrong instruction executed, reset pc to target branch
+                btb_pc_we_o = 1'b1;
+                pc_set_o    = 1'b1;
+                pc_mux_o    = PC_BRANCH;
+            end
+            if(branch_in_ex_i && !branch_decision_i && branch_prediction_i) begin
+                // branch didn't happen, but btb think it happened
+                // clear btb branch info, reset pc to pc_ex + 4
+                btb_pc_clear_o  = 1'b1;
+                pc_set_o        = 1'b1;
+                pc_mux_o        = PC_EX_INCR;
+            end
         end
-        if(branch_decision_i) begin
-            pc_set_o    = 1'b1;
-            pc_mux_o    = PC_BRANCH;
-        end
-    end
-
-    always_comb begin : STALL_CLEAR
-        stall_if_o  = 1'b0;
-        stall_id_o  = 1'b0;
-        stall_ex_o  = 1'b0;
-        stall_mem_o = 1'b0;
-        stall_wb_o  = 1'b0;
-        clear_if_o  = 1'b0;
-        clear_id_o  = 1'b0;
-        clear_ex_o  = 1'b0;
-        clear_mem_o = 1'b0;
-        clear_wb_o  = 1'b0;
-        if(jump_decision_i) begin
-            clear_id_o  = 1'b1;
-        end
-
-        if(branch_decision_i) begin
-            clear_id_o  = 1'b1;
-            clear_ex_o  = 1'b1;
-        end
-
-        if(mem_req_i && regfile_we_mem_i && 
-           (rs1_used_ex_i || rs2_used_ex_i) &&
-           (regfile_waddr_mem_i == rs1_raddr_ex_i || regfile_waddr_mem_i == rs2_raddr_ex_i))
-        begin
-            clear_if_o  = 1'b0;
-            clear_id_o  = 1'b0;
-            clear_ex_o  = 1'b0;
-            stall_if_o  = 1'b1;
-            stall_id_o  = 1'b1;
-            stall_ex_o  = 1'b1;
-            clear_mem_o = 1'b1;
-        end
-
-        if(mem_miss_i) begin
+        // stall and clear
+        always_comb begin: STALL_CLEAR
+            stall_if_o  = 1'b0;
+            stall_id_o  = 1'b0;
+            stall_ex_o  = 1'b0;
+            stall_mem_o = 1'b0;
+            stall_wb_o  = 1'b0;
             clear_if_o  = 1'b0;
             clear_id_o  = 1'b0;
             clear_ex_o  = 1'b0;
             clear_mem_o = 1'b0;
             clear_wb_o  = 1'b0;
-            stall_if_o  = 1'b1;
-            stall_id_o  = 1'b1;
-            stall_ex_o  = 1'b1;
-            stall_mem_o = 1'b1;
-            stall_wb_o  = 1'b1;
+            if(jump_decision_i) begin
+                clear_id_o  = 1'b1;
+            end
+            // if branch prediction failed, clear pipeline
+            if(branch_in_ex_i && (branch_decision_i ^ branch_prediction_i)) begin
+                clear_id_o  = 1'b1;
+                clear_ex_o  = 1'b1;
+            end
+
+            if(mem_req_i && regfile_we_mem_i && 
+            (rs1_used_ex_i || rs2_used_ex_i) &&
+            (regfile_waddr_mem_i == rs1_raddr_ex_i || regfile_waddr_mem_i == rs2_raddr_ex_i))
+            begin
+                clear_if_o  = 1'b0;
+                clear_id_o  = 1'b0;
+                clear_ex_o  = 1'b0;
+                stall_if_o  = 1'b1;
+                stall_id_o  = 1'b1;
+                stall_ex_o  = 1'b1;
+                clear_mem_o = 1'b1;
+            end
+
+            if(mem_miss_i) begin
+                clear_if_o  = 1'b0;
+                clear_id_o  = 1'b0;
+                clear_ex_o  = 1'b0;
+                clear_mem_o = 1'b0;
+                clear_wb_o  = 1'b0;
+                stall_if_o  = 1'b1;
+                stall_id_o  = 1'b1;
+                stall_ex_o  = 1'b1;
+                stall_mem_o = 1'b1;
+                stall_wb_o  = 1'b1;
+            end
         end
     end
+    else if(USE_BTB && USE_BHT) begin
+        // remain to be filled
+    end
+    else begin
+        // no branch prediction
+        // branches and jumps
+        always_comb begin : PC_SET_MUX
+            // priority increases
+            pc_set_o    = 1'b0;
+            pc_mux_o    = PC_BOOT;
+            if(jump_decision_i) begin
+                pc_set_o    = 1'b1;
+                pc_mux_o    = PC_JUMP;
+            end
+            if(branch_decision_i) begin
+                pc_set_o    = 1'b1;
+                pc_mux_o    = PC_BRANCH;
+            end
+        end
+
+        always_comb begin : STALL_CLEAR
+            stall_if_o  = 1'b0;
+            stall_id_o  = 1'b0;
+            stall_ex_o  = 1'b0;
+            stall_mem_o = 1'b0;
+            stall_wb_o  = 1'b0;
+            clear_if_o  = 1'b0;
+            clear_id_o  = 1'b0;
+            clear_ex_o  = 1'b0;
+            clear_mem_o = 1'b0;
+            clear_wb_o  = 1'b0;
+            if(jump_decision_i) begin
+                clear_id_o  = 1'b1;
+            end
+
+            if(branch_decision_i) begin
+                clear_id_o  = 1'b1;
+                clear_ex_o  = 1'b1;
+            end
+
+            if(mem_req_i && regfile_we_mem_i && 
+            (rs1_used_ex_i || rs2_used_ex_i) &&
+            (regfile_waddr_mem_i == rs1_raddr_ex_i || regfile_waddr_mem_i == rs2_raddr_ex_i))
+            begin
+                clear_if_o  = 1'b0;
+                clear_id_o  = 1'b0;
+                clear_ex_o  = 1'b0;
+                stall_if_o  = 1'b1;
+                stall_id_o  = 1'b1;
+                stall_ex_o  = 1'b1;
+                clear_mem_o = 1'b1;
+            end
+
+            if(mem_miss_i) begin
+                clear_if_o  = 1'b0;
+                clear_id_o  = 1'b0;
+                clear_ex_o  = 1'b0;
+                clear_mem_o = 1'b0;
+                clear_wb_o  = 1'b0;
+                stall_if_o  = 1'b1;
+                stall_id_o  = 1'b1;
+                stall_ex_o  = 1'b1;
+                stall_mem_o = 1'b1;
+                stall_wb_o  = 1'b1;
+            end
+        end
+    end
+endgenerate
 
 endmodule

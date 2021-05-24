@@ -13,7 +13,10 @@
 
 module ex_stage import core_pkg::*;
 #(
-    parameter DEBUG          = 0
+    parameter DEBUG          = 0,
+    parameter USE_BTB        = 0,
+    parameter USE_BHT        = 0
+
 )
 (
     input   logic           clk,
@@ -45,10 +48,13 @@ module ex_stage import core_pkg::*;
     input   logic   [CSR_ADDR_WIDTH-1:0] csr_addr_i,
     input   logic   [2 :0]  csr_type_i,
     input   logic           csr_we_i,
+    input   logic           branch_prediction_i,
 
     // handle branches
     output  logic           branch_decision_o,
     output  logic   [31:0]  branch_target_o,
+    output  logic           branch_prediction_o,
+    output  logic           branch_in_ex_o,
 
     // to controller
     output  logic   [4 :0]  rs1_raddr_o,
@@ -97,6 +103,7 @@ module ex_stage import core_pkg::*;
     logic   [CSR_ADDR_WIDTH-1:0] csr_addr;
     logic   [2 :0]  csr_type;
     logic           csr_we;
+    logic           branch_prediction;
 
     // datapath signals in EX
     logic   [31:0]  rs1_rdata_fw;
@@ -139,6 +146,7 @@ module ex_stage import core_pkg::*;
             csr_addr            <= '0;
             csr_type            <= CSR_NONE;
             csr_we              <= 1'b0;
+            branch_prediction   <= 1'b0;
         end
         else if(~stall_ex_i) begin
             // unstall whole pipeline
@@ -164,6 +172,7 @@ module ex_stage import core_pkg::*;
             csr_addr            <= csr_addr_i;
             csr_type            <= csr_type_i;
             csr_we              <= csr_we_i;
+            branch_prediction   <= branch_prediction_i;
         end
     end
 
@@ -228,7 +237,9 @@ module ex_stage import core_pkg::*;
     );
 
     // handle branches
-    assign branch_target_o = alu_result;
+    assign branch_target_o      = alu_result;
+    assign branch_prediction_o  = branch_prediction;
+    assign branch_in_ex_o       = branch_type == BRCH_NOP ? 0 : 1;
     always_comb begin : BRANCH_DECISION
         branch_decision_o = 1'b0;
         case (branch_type)

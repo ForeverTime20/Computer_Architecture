@@ -16,7 +16,10 @@ module id_stage import core_pkg::*;
 #(
     parameter DEBUG        = 0,
     parameter USE_RAM_IP   = 0,
-    parameter USE_CACHE    = 0
+    parameter USE_CACHE    = 0,
+    parameter USE_BTB      = 0,
+    parameter USE_BHT      = 0
+
 )
 (
     input   logic           clk,
@@ -26,6 +29,7 @@ module id_stage import core_pkg::*;
     input   logic           clear_id_i,
 
     input   logic   [31:0]  pc_if_i,
+    input   logic           branch_prediction_if_i,
 
     output  logic           jump_decision_o,
     output  logic   [31:0]  jump_target_o,
@@ -52,6 +56,7 @@ module id_stage import core_pkg::*;
     output  logic   [CSR_ADDR_WIDTH-1:0] csr_addr_ex_o,
     output  logic   [2 :0]  csr_type_ex_o,
     output  logic           csr_we_ex_o,   
+    output  logic           branch_prediction_ex_o,
 
     input   logic   [4 :0]  regfile_waddr_wb_i,
     input   logic           regfile_we_wb_i,
@@ -81,7 +86,7 @@ module id_stage import core_pkg::*;
     localparam IMM_FOUR         = 6;
     localparam IMM_Z            = 7;
 
-
+    logic           branch_prediction;
     logic   [31:0]  instr_raw;
     logic   [31:0]  instr;
     logic   [31:0]  instr_old;
@@ -148,6 +153,15 @@ generate
         );
     end
 endgenerate
+
+    always_ff @( posedge clk ) begin : IF_ID_PIPELINE
+        if(clear_id_i | (~rst_n)) begin
+            branch_prediction   <= 1'b0;
+        end
+        else if(~stall_id_i) begin
+            branch_prediction   <= branch_prediction_if_i;
+        end
+    end
 
     always_ff @( posedge clk ) begin : PC_ID
         if(~stall_id_i)
@@ -493,5 +507,6 @@ endgenerate
     assign csr_addr_ex_o        = csr_addr;
     assign csr_type_ex_o        = csr_type;
     assign csr_we_ex_o          = csr_we;
+    assign branch_prediction_ex_o = branch_prediction;
 
 endmodule

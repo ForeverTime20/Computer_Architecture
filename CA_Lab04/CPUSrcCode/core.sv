@@ -13,7 +13,9 @@ module RV32Core import core_pkg::*;
 #(
     parameter DEBUG             = 1,
     parameter USE_RAM_IP        = 0,
-    parameter USE_CACHE         = 1
+    parameter USE_CACHE         = 1,
+    parameter USE_BTB           = 1,
+    parameter USE_BHT           = 1
 )
 (
     input   logic           clk,
@@ -50,6 +52,7 @@ module RV32Core import core_pkg::*;
     logic           clear_wb;
 
     // IF-ID
+    logic           branch_prediction_if;
     
     // ID-EX
     logic           alu_ex_ex;
@@ -73,6 +76,7 @@ module RV32Core import core_pkg::*;
     logic   [CSR_ADDR_WIDTH-1:0] csr_addr_ex;
     logic   [2 :0]  csr_type_ex;
     logic           csr_we_ex;
+    logic           branch_predicition_ex;
 
     // EX-MEM
     logic   [31:0]  alu_result_mem;
@@ -116,6 +120,8 @@ module RV32Core import core_pkg::*;
     logic   [4 :0]  regfile_waddr_ctrl_w;
     logic           regfile_we_ctrl_w;
     logic           mem_miss;
+    logic           branch_prediction;
+    logic           branch_in_ex;
 
     // Forward signals
     logic   [31:0]  regfile_wdata_fw_mem;
@@ -125,6 +131,14 @@ module RV32Core import core_pkg::*;
     // Jumps and Branches
     logic   [31:0]  jump_target;
     logic   [31:0]  branch_target;
+    // BTB and BHT 
+    // logic   [31:0]  btb_pc_brancher;
+    logic           btb_pc_we;
+    // logic   [31:0]  btb_pc_target;
+    logic           btb_pc_clear;
+    // logic   [31:0]  bht_pc_brancher;
+    logic           bht_branch_prediction;
+    logic           bht_we;
 
     assign regfile_wdata_fw_wb  = regfile_wdata;
     assign regfile_waddr_ctrl_w = regfile_waddr;
@@ -142,7 +156,9 @@ module RV32Core import core_pkg::*;
   //////////////////////////////////////////////////
     if_stage
     #(
-        .DEBUG              ( DEBUG             )
+        .DEBUG              ( DEBUG             ),
+        .USE_BTB            ( USE_BTB           ),
+        .USE_BHT            ( USE_BHT           )
     )
     if_stage_i
     (
@@ -154,13 +170,25 @@ module RV32Core import core_pkg::*;
 
         .pc_set_i           ( pc_set            ),
         .pc_mux_i           ( pc_mux            ),
+        .pc_ex_i            ( pc_ex             ),
         .boot_addr_i        ( 32'h0             ),
         .jump_target_id_i   ( jump_target       ),
         .branch_target_ex_i ( branch_target     ),
 
         // IF-ID Pipeline
-        .pc_if_o            ( pc_if             )
-    );
+        .pc_if_o            ( pc_if             ),
+        .branch_prediction_if_o(branch_prediction_if),
+        
+        // branch prediction wires
+        .btb_pc_brancher_i  ( pc_ex             ),
+        .btb_pc_we_i        ( btb_pc_we         ),
+        .btb_pc_target_i    ( branch_target     ),
+        .btb_pc_clear_i     ( btb_pc_clear      ),
+
+        .bht_pc_brancher_i  ( pc_ex             ),
+        .bht_branch_deicision_i(bht_branch_prediction),
+        .bht_we_i           ( bht_we            )
+    ); 
 
   /////////////////////////////////////////////////
   //   ___ ____    ____ _____  _    ____ _____   //
@@ -174,7 +202,10 @@ module RV32Core import core_pkg::*;
     #(
         .DEBUG              ( DEBUG             ),
         .USE_RAM_IP         ( USE_RAM_IP        ),
-        .USE_CACHE          ( USE_CACHE         )
+        .USE_CACHE          ( USE_CACHE         ),
+        .USE_BTB            ( USE_BTB           ),
+        .USE_BHT            ( USE_BHT           )
+
     )
     id_stage_i
     (
@@ -186,6 +217,7 @@ module RV32Core import core_pkg::*;
 
         // From IF stage
         .pc_if_i            ( pc_if             ),
+        .branch_prediction_if_i(branch_prediction_if),
 
         // jumps in id
         .jump_decision_o    ( jump_decision     ),
@@ -214,6 +246,7 @@ module RV32Core import core_pkg::*;
         .csr_addr_ex_o      ( csr_addr_ex       ),
         .csr_we_ex_o        ( csr_we_ex         ),
         .csr_type_ex_o      ( csr_type_ex       ),
+        .branch_prediction_ex_o(branch_prediction_ex),
 
         // From WB stage
         .regfile_waddr_wb_i ( regfile_waddr     ),
@@ -231,7 +264,10 @@ module RV32Core import core_pkg::*;
   /////////////////////////////////////////////////////
     ex_stage
     #(
-        .DEBUG              ( DEBUG             )
+        .DEBUG              ( DEBUG             ),
+        .USE_BTB            ( USE_BTB           ),
+        .USE_BHT            ( USE_BHT           )
+
     )
     ex_stage_i
     (
@@ -264,10 +300,13 @@ module RV32Core import core_pkg::*;
         .csr_addr_i         ( csr_addr_ex       ),
         .csr_type_i         ( csr_type_ex       ),
         .csr_we_i           ( csr_we_ex         ),
+        .branch_prediction_i(branch_prediction_ex),
 
         // handle branches
         .branch_decision_o  ( branch_decision   ),
         .branch_target_o    ( branch_target     ),
+        .branch_prediction_o( branch_prediction ),
+        .branch_in_ex_o     ( branch_in_ex      ),
 
         // to controller
         .rs1_raddr_o        ( rs1_raddr         ),
@@ -384,18 +423,29 @@ module RV32Core import core_pkg::*;
   ////////////////////////////////////////////////////////////////////
     controller 
     #(
-        .DEBUG              ( DEBUG             )
+        .DEBUG              ( DEBUG             ),
+        .USE_BTB            ( USE_BTB           ),
+        .USE_BHT            ( USE_BHT           )
     )
     controller_i
     (
         .clk                ( clk           ),
         .rst_n              ( ~rst          ),
 
+        // branches and jumps
         .jump_decision_i    ( jump_decision     ),
         .branch_decision_i  ( branch_decision   ),
+        .branch_prediction_i( branch_prediction ),
+        .branch_in_ex_i     ( branch_in_ex      ),
         .pc_set_o           ( pc_set            ),
         .pc_mux_o           ( pc_mux            ),
+        // branch_predictions
+        .btb_pc_we_o        ( btb_pc_we         ),
+        .btb_pc_clear_o     ( btb_pc_clear      ),
+        .bht_branch_prediction_o(bht_branch_prediction),
+        .bht_we_o           ( bht_we            ),
 
+        // pipeline stall, clear signals
         .stall_if_o         ( stall_if          ),
         .stall_id_o         ( stall_id          ),
         .stall_ex_o         ( stall_ex          ),
@@ -407,6 +457,7 @@ module RV32Core import core_pkg::*;
         .clear_mem_o        ( clear_me          ),
         .clear_wb_o         ( clear_wb          ),
 
+        // ex, mem, wb info
         .rs1_raddr_ex_i     ( rs1_raddr         ),
         .rs2_raddr_ex_i     ( rs2_raddr         ),
         .rs1_used_ex_i      ( rs1_used          ),
@@ -417,6 +468,7 @@ module RV32Core import core_pkg::*;
         .regfile_waddr_wb_i ( regfile_waddr_ctrl_w),
         .regfile_we_wb_i    ( regfile_we_ctrl_w),
 
+        // forward signals
         .rs1_forward_o      ( rs1_forward       ),
         .rs2_forward_o      ( rs2_forward       ),
 

@@ -73,6 +73,7 @@ package core_pkg;
     parameter PC_BOOT          = 4'b0000;
     parameter PC_JUMP          = 4'b0010;
     parameter PC_BRANCH        = 4'b0011;
+    parameter PC_EX_INCR       = 4'b0100;
 
 // ID stage
 
