@@ -15,7 +15,7 @@ module RV32Core import core_pkg::*;
     parameter USE_RAM_IP        = 0,
     parameter USE_CACHE         = 1,
     parameter USE_BTB           = 1,
-    parameter USE_BHT           = 1
+    parameter USE_BHT           = 0
 )
 (
     input   logic           clk,
@@ -122,6 +122,7 @@ module RV32Core import core_pkg::*;
     logic           mem_miss;
     logic           branch_prediction;
     logic           branch_in_ex;
+    logic   [BRCH_OP_WIDTH-1:0] branch_type;
 
     // Forward signals
     logic   [31:0]  regfile_wdata_fw_mem;
@@ -307,6 +308,7 @@ module RV32Core import core_pkg::*;
         .branch_target_o    ( branch_target     ),
         .branch_prediction_o( branch_prediction ),
         .branch_in_ex_o     ( branch_in_ex      ),
+        .branch_type_o      ( branch_type       ),
 
         // to controller
         .rs1_raddr_o        ( rs1_raddr         ),
@@ -437,6 +439,7 @@ module RV32Core import core_pkg::*;
         .branch_decision_i  ( branch_decision   ),
         .branch_prediction_i( branch_prediction ),
         .branch_in_ex_i     ( branch_in_ex      ),
+        .branch_type_i      ( branch_type       ),
         .pc_set_o           ( pc_set            ),
         .pc_mux_o           ( pc_mux            ),
         // branch_predictions

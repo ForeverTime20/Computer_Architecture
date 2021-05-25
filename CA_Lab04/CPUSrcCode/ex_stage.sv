@@ -55,6 +55,7 @@ module ex_stage import core_pkg::*;
     output  logic   [31:0]  branch_target_o,
     output  logic           branch_prediction_o,
     output  logic           branch_in_ex_o,
+    output  logic   [BRCH_OP_WIDTH-1:0] branch_type_o,
 
     // to controller
     output  logic   [4 :0]  rs1_raddr_o,
@@ -239,7 +240,8 @@ module ex_stage import core_pkg::*;
     // handle branches
     assign branch_target_o      = alu_result;
     assign branch_prediction_o  = branch_prediction;
-    assign branch_in_ex_o       = branch_type == BRCH_NOP ? 0 : 1;
+    assign branch_in_ex_o       = (branch_type == BRCH_NOP) ? 0 : 1;
+    assign branch_type_o        = branch_type;
     always_comb begin : BRANCH_DECISION
         branch_decision_o = 1'b0;
         case (branch_type)

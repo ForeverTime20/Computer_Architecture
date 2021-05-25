@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-`define TRACE_REF_FILE "./cpu_trace.txt"
+`define TRACE_REF_FILE "../../../../cpu_trace.txt"
 
 module trace_gen_tb(
 

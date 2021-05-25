@@ -281,6 +281,18 @@ reg [31:0] ram_cell [0:65535];
     end
 `endif
 
+`ifdef BTB
+    initial begin
+        ram_cell[       0] = 32'h00000293;
+        ram_cell[       1] = 32'h00000313;
+        ram_cell[       2] = 32'h06500393;
+        ram_cell[       3] = 32'h00530333;
+        ram_cell[       4] = 32'h00128293;
+        ram_cell[       5] = 32'hfe729ce3;
+        ram_cell[       6] = 32'h00130313;
+    end
+`endif
+
 always @ (posedge clk)
     douta <= addra_valid ? ram_cell[addral] : 0;
     
