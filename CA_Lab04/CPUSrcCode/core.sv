@@ -15,7 +15,7 @@ module RV32Core import core_pkg::*;
     parameter USE_RAM_IP        = 0,
     parameter USE_CACHE         = 1,
     parameter USE_BTB           = 1,
-    parameter USE_BHT           = 0
+    parameter USE_BHT           = 1
 )
 (
     input   logic           clk,
@@ -138,7 +138,7 @@ module RV32Core import core_pkg::*;
     // logic   [31:0]  btb_pc_target;
     logic           btb_pc_clear;
     // logic   [31:0]  bht_pc_brancher;
-    logic           bht_branch_prediction;
+    logic           bht_branch_fact;
     logic           bht_we;
 
     assign regfile_wdata_fw_wb  = regfile_wdata;
@@ -187,7 +187,7 @@ module RV32Core import core_pkg::*;
         .btb_pc_clear_i     ( btb_pc_clear      ),
 
         .bht_pc_brancher_i  ( pc_ex             ),
-        .bht_branch_deicision_i(bht_branch_prediction),
+        .bht_branch_fact_i  ( bht_branch_fact   ),
         .bht_we_i           ( bht_we            )
     ); 
 
@@ -445,7 +445,7 @@ module RV32Core import core_pkg::*;
         // branch_predictions
         .btb_pc_we_o        ( btb_pc_we         ),
         .btb_pc_clear_o     ( btb_pc_clear      ),
-        .bht_branch_prediction_o(bht_branch_prediction),
+        .bht_branch_fact_o  ( bht_branch_fact   ),
         .bht_we_o           ( bht_we            ),
 
         // pipeline stall, clear signals

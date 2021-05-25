@@ -32,7 +32,7 @@ module controller import core_pkg::*;
     // branch predictions
     output  logic           btb_pc_we_o,
     output  logic           btb_pc_clear_o,
-    output  logic           bht_branch_prediction_o,
+    output  logic           bht_branch_fact_o,
     output  logic           bht_we_o,
 
     // pipeline stall, clear signals
@@ -174,7 +174,7 @@ generate
             bht_we_o        = 1'b0;
             pc_set_o        = 1'b0;
             pc_mux_o        = PC_BOOT;
-            bht_branch_prediction_o = branch_prediction_i;
+            bht_branch_fact_o = branch_decision_i;
             if(jump_decision_i) begin
                 pc_set_o    = 1'b1;
                 pc_mux_o    = PC_JUMP;
@@ -183,10 +183,11 @@ generate
                 // branch happened but btb did'nt precicted
                 // write branch pc, branch target to btb
                 // wrong instruction executed, reset pc to target branch
-                btb_pc_we_o = 1'b1;
                 bht_we_o    = 1'b1;
                 pc_set_o    = 1'b1;
                 pc_mux_o    = PC_BRANCH;
+                if(branch_type_i != BRCH_JALR)  // in case btb record jalr into buffer
+                    btb_pc_we_o = 1'b1;
             end
             if(branch_in_ex_i && !branch_decision_i && branch_prediction_i) begin
                 // branch didn't happen, but btb think it happened
@@ -195,6 +196,10 @@ generate
                 bht_we_o        = 1'b1;
                 pc_set_o        = 1'b1;
                 pc_mux_o        = PC_EX_INCR;
+            end
+            if(branch_in_ex_i) begin
+                // whatever this branch is predicted, update bht anyway
+                bht_we_o    = 1'b1;
             end
         end
         // stall and clear

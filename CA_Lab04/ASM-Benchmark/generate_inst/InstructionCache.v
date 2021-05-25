@@ -1,4 +1,4 @@
-// asm file name: btb.S
+// asm file name: bht.S
 module InstructionCache(
     input wire clk,
     input wire write_en,
@@ -21,11 +21,15 @@ module InstructionCache(
         debug_data = 32'h0;
         inst_cache[       0] = 32'h00000293;
         inst_cache[       1] = 32'h00000313;
-        inst_cache[       2] = 32'h06500393;
-        inst_cache[       3] = 32'h00530333;
-        inst_cache[       4] = 32'h00128293;
-        inst_cache[       5] = 32'hfe729ce3;
-        inst_cache[       6] = 32'h00130313;
+        inst_cache[       2] = 32'h00000393;
+        inst_cache[       3] = 32'h00a00e13;
+        inst_cache[       4] = 32'h00138393;
+        inst_cache[       5] = 32'h00530333;
+        inst_cache[       6] = 32'h00128293;
+        inst_cache[       7] = 32'hffc29ce3;
+        inst_cache[       8] = 32'h00000293;
+        inst_cache[       9] = 32'hffc396e3;
+        inst_cache[      10] = 32'h00130313;
 end
 
     always@(posedge clk)

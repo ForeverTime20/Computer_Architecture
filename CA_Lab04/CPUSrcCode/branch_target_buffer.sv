@@ -1,11 +1,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Engineer:       Jiang Binze - jiangbinze@mail.ustc.edu.cn                  //
 //                                                                            //
-// Design Name:    branch_history_table module                                //
+// Design Name:    branch_target_buffer module                                //
 // Project Name:   RISCV Core                                                 //
 // Language:       SystemVerilog                                              //
 //                                                                            //
-// Description:    record branch history in ex stage                          //
+// Description:    store recent branch target addresses                       //
 //                                                                            //
 // Mother Module Name:                                                        //
 //                 if_stage                                                   //
