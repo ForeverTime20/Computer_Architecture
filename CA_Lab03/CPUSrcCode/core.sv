@@ -12,8 +12,8 @@
 module RV32Core import core_pkg::*;
 #(
     parameter DEBUG             = 1,
-    parameter USE_RAM_IP        = 0,
-    parameter USE_CACHE         = 1
+    parameter USE_RAM_IP        = 1,
+    parameter USE_CACHE         = 0
 )
 (
     input   logic           clk,

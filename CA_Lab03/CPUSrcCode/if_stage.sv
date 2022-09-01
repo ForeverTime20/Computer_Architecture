@@ -41,7 +41,7 @@ module if_stage import core_pkg::*;
 
     always_ff @(posedge clk, negedge rst_n) begin : PC_REG
         if(rst_n == 1'b0)
-            pc_q    <= 32'h0;
+            pc_q    <= 32'h0000_3000;
         else
             pc_q    <= pc_n;
     end

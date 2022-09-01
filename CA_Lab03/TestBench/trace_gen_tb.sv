@@ -37,7 +37,6 @@ module trace_gen_tb(
     assign  reg_write_addr      =   cpu_core.regfile_waddr;
     assign  reg_write_data      =   cpu_core.regfile_wdata;
     assign  pc_wb               =   cpu_core.wb_stage_i.pc_wb;
-    // assign  pipeline_valid      =   rpu_core.ex_valid;
 
     // open the trace file;
     integer trace_ref;

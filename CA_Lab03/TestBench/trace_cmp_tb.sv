@@ -98,10 +98,20 @@ module trace_cmp_tb(
 
         #10000;
         while('1) begin
-            #10000;
+            #50;
             $display ("        [%t] Test is running, pc_wb = 0x%8h",$time, pc_wb);
         end
     end
-
+    
+    // test end
+    always @(posedge clk) begin
+        if (pc_wb == 32'h0000_30ac) begin
+            $display("==============================================================");
+            #40;
+            $fclose(trace_ref);
+            $display("----PASS!!!");
+	        $finish;
+	   end
+    end
 
 endmodule
